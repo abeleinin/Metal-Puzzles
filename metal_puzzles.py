@@ -1,5 +1,5 @@
-from utils import MetalProblem
 import mlx.core as mx
+from utils import MetalProblem
 
 ### Puzzle 1: Map
 

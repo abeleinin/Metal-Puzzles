@@ -7,7 +7,26 @@ Inspired by [srush/GPU-Puzzles](https://github.com/srush/GPU-Puzzles) and [@awni
 - More puzzles
 - `problem.show()` support
 
+If you're interested in learning GPU programming on an Apple Silicon computer, this is a great repository for you! Whether you're new to GPU programming or have exerpience with CUDA, these puzzles provide an accessible way to learn GPU programming on Apple Silicon.
+
+In the following exercises, you'll use the `mx.fast.metal_kernel()` function from Apple's [mlx](https://github.com/ml-explore/mlx) framework, which allows you to write custom Metal kernels through a Python/C++ API. The function takes a `source` string, which defines the Metal kernel body using the Metal Shading Language. 
+
+If you're interested in more material, check out the [MLX Custom Metal Kernels Documentation](https://ml-explore.github.io/mlx/build/html/dev/custom_metal_kernels.html) and the [Metal Shading Language specification](https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf).
+
+```sh
+python -m pip install git+https://github.com/ml-explore/mlx
+```
+
+```python
+import mlx.core as mx
+from utils import MetalProblem
+```
+
 ## Puzzle 1: Map
+
+Implement a "kernel" (GPU function) that adds 10 to each position of the array `a` and stores it in the array `out`.  You have 1 thread per position.
+
+**Note:** The `source` string below is the body of your Metal kernel, the function signature with be automatically generated for you. Below you'll notice the `input_names` and `output_names` parameters. These define the parameters for your Metal kernel.
 
 ```python
 def map_spec(a: mx.array):
