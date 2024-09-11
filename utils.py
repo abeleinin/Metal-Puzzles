@@ -13,30 +13,33 @@ class MetalProblem:
     spec: Any = None
 
     def run_metal(self):
-        inputs, source = self.fn(*self.inputs)
+        assert mx.metal.is_available(), "Metal is not available"
 
-        kernel = mx.fast.metal_kernel(
-            name=self.name,
-            source=source,
-        )
+        kernel = self.fn(*self.inputs)
 
         outputs = kernel(
-            inputs=inputs,
+            inputs=self.inputs,
             grid=self.grid,
             threadgroup=self.threadgroup,
-            output_shapes={"out": self.output_shapes},
-            output_dtypes={"out": mx.float32},
+            output_shapes=[self.output_shapes],
+            output_dtypes=[mx.float32],
+            stream=mx.gpu,
         )
 
-        return outputs["out"]
+        return outputs[0]
 
     def check(self):
-        x = self.run_metal()
-        y = self.spec(*self.inputs)
+        try:
+            x = self.run_metal()
+            y = self.spec(*self.inputs)
 
-        if mx.allclose(x, y): 
-            print("Passed Tests!")
-        else:
+            if mx.allclose(x, y): 
+                print("Passed Tests!")
+                return 
+
             print("Failed Tests.")
             print("Yours:", x)
             print("Spec :", y)
+
+        except AssertionError as e:
+            print(f"Error: {e}")

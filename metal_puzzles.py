@@ -7,14 +7,19 @@ def map_spec(a: mx.array):
     return a + 10
 
 def map_test(a: mx.array):
-    inputs = {"a": a}
-
     source = """
         uint local_i = thread_position_in_grid.x;
         // FILL ME IN (roughly 1 line)
     """
 
-    return inputs, source 
+    kernel = mx.fast.metal_kernel(
+        name="map",
+        input_names=["a"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
 
 SIZE = 4
 a = mx.arange(SIZE)
