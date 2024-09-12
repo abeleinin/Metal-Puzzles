@@ -71,3 +71,50 @@ problem.check()
     Failed Tests.
     Yours: [0. 0. 0. 0.]
     Spec : [10 11 12 13]
+
+## Puzzle 2: Zip 
+
+Implement a kernel that takes two arrays `a` and `b`, adds each element together, and stores the result in an output array `out`. You have 1 thread per position.
+
+```python
+def zip_spec(a: mx.array, b: mx.array):
+    return a + b
+
+def zip_test(a: mx.array, b: mx.array):
+    source = """
+        uint local_i = thread_position_in_grid.x;
+        // FILL ME IN (roughly 1 line)
+    """
+
+    kernel = mx.fast.metal_kernel(
+        name="zip",
+        input_names=["a", "b"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 4
+a = mx.arange(SIZE)
+b = mx.arange(SIZE)
+output_shapes = (SIZE,)
+
+problem = MetalProblem(
+    "Zip",
+    zip_test,
+    [a, b],
+    output_shapes,
+    grid=(SIZE,1,1),
+    threadgroup=(SIZE,1,1),
+    spec=zip_spec
+)
+```
+
+```python
+problem.check()
+```
+
+    Failed Tests.
+    Yours: [0. 0. 0. 0.]
+    Spec : [0 2 4 6]

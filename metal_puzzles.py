@@ -1,9 +1,12 @@
 import mlx.core as mx
 from utils import MetalProblem
 
+############################################################
 ### Puzzle 1: Map
-# Implement a "kernel" (GPU function) that adds 10 to each position of the array 
-# `a` and stores it in the array `out`.  You have 1 thread per position.
+############################################################
+# Implement a "kernel" (GPU function) that adds 10 to each 
+# position of the array `a` and stores it in the array `out`. 
+# You have 1 thread per position.
 # 
 # Note: The `source` string below is the body of your Metal kernel, the 
 # function signature with be automatically generated for you. Below you'll 
@@ -42,6 +45,48 @@ problem = MetalProblem(
     grid=(SIZE,1,1), 
     threadgroup=(SIZE,1,1), 
     spec=map_spec
+)
+
+problem.check()
+
+############################################################
+### Puzzle 2: Zip
+############################################################
+# Implement a kernel that takes two arrays `a` and `b`, adds each 
+# element together, and stores the result in an output array `out`.
+# You have 1 thread per position.
+
+def zip_spec(a: mx.array, b: mx.array):
+    return a + b
+
+def zip_test(a: mx.array, b: mx.array):
+    source = """
+        uint local_i = thread_position_in_grid.x;
+        // FILL ME IN (roughly 1 line)
+    """
+
+    kernel = mx.fast.metal_kernel(
+        name="zip",
+        input_names=["a", "b"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 4
+a = mx.arange(SIZE)
+b = mx.arange(SIZE)
+output_shapes = (SIZE,)
+
+problem = MetalProblem(
+    "Zip",
+    zip_test,
+    [a, b],
+    output_shapes,
+    grid=(SIZE,1,1),
+    threadgroup=(SIZE,1,1),
+    spec=zip_spec
 )
 
 problem.check()
