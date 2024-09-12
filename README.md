@@ -28,6 +28,8 @@ Implement a "kernel" (GPU function) that adds 10 to each position of the array `
 
 **Note:** The `source` string below is the body of your Metal kernel, the function signature with be automatically generated for you. Below you'll notice the `input_names` and `output_names` parameters. These define the parameters for your Metal kernel.
 
+To print out the generated Metal kernel set the environment variable `VERBOSE=1`.
+
 ```python
 def map_spec(a: mx.array):
     return a + 10
@@ -51,7 +53,15 @@ SIZE = 4
 a = mx.arange(SIZE)
 output_shape = (SIZE,)
 
-problem = MetalProblem("Map", map_test, [a], output_shape, grid=(SIZE,1,1), threadgroup=(SIZE,1,1), spec=map_spec)
+problem = MetalProblem(
+    "Map",
+    map_test,
+    [a], 
+    output_shape,
+    grid=(SIZE,1,1), 
+    threadgroup=(SIZE,1,1), 
+    spec=map_spec
+)
 ```
 
 ```python

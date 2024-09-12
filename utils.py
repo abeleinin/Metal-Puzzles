@@ -1,5 +1,8 @@
+import os
+
 from dataclasses import dataclass
 from typing import List, Tuple, Any
+
 import mlx.core as mx
 
 @dataclass
@@ -24,6 +27,7 @@ class MetalProblem:
             output_shapes=[self.output_shapes],
             output_dtypes=[mx.float32],
             stream=mx.gpu,
+            verbose=os.getenv("VERBOSE")=='1',
         )
 
         return outputs[0]
