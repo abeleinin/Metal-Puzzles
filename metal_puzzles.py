@@ -90,3 +90,40 @@ problem = MetalProblem(
 )
 
 problem.check()
+
+############################################################
+### Puzzle 3: Guard
+############################################################
+# Implement a kernel that adds 10 to each position of `a` and 
+# stores it in `out`. You have more threads than positions.
+
+def map_guard_test(a: mx.array):
+    source = """
+        uint local_i = thread_position_in_grid.x;
+        // FILL ME IN (roughly 1-3 lines)
+    """
+
+    kernel = mx.fast.metal_kernel(
+        name="guard",
+        input_names=["a"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 4
+a = mx.arange(SIZE)
+output_shape = (SIZE,)
+
+problem = MetalProblem(
+    "Guard",
+    map_test,
+    [a], 
+    output_shape,
+    grid=(8,1,1), 
+    threadgroup=(8,1,1), 
+    spec=map_spec
+)
+
+problem.check()
