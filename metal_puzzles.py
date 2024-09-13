@@ -124,3 +124,41 @@ problem = MetalProblem(
 )
 
 problem.check()
+
+############################################################
+### Puzzle 4: Map 2D
+############################################################
+# Implement a kernel that adds 10 to each position of `a` and 
+# stores it in `out`. Input `a` is 2D and square. You have more 
+# threads than positions.
+
+def map_2D_test(a: mx.array):
+    source = """
+        uint thread_x = thread_position_in_grid.x;
+        uint thread_y = thread_position_in_grid.y;
+        // FILL ME IN (roughly 4 lines)
+    """
+
+    kernel = MetalKernel(
+        name="map_2D",
+        input_names=["a"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 2
+a = mx.arange(SIZE * SIZE).reshape((SIZE, SIZE))
+output_shape = (SIZE,SIZE)
+
+problem = MetalProblem(
+    "Map 2D",
+    map_2D_test,
+    [a], 
+    output_shape,
+    grid=(3,3,1), 
+    spec=map_spec
+)
+
+problem.check()
