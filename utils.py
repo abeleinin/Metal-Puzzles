@@ -6,6 +6,21 @@ from typing import List, Tuple, Any
 import mlx.core as mx
 
 @dataclass
+class MetalKernel:
+    name: str
+    input_names: List[str]
+    output_names: List[str]
+    source: str
+
+    def __call__(self):
+        return mx.fast.metal_kernel(
+            name=self.name,
+            input_names=self.input_names,
+            output_names=self.output_names,
+            source=self.source,
+        )
+
+@dataclass
 class MetalProblem:
     name: str
     fn: Any
@@ -18,7 +33,7 @@ class MetalProblem:
     def run_metal(self):
         assert mx.metal.is_available(), "Metal is not available"
 
-        kernel = self.fn(*self.inputs)
+        kernel = self.fn(*self.inputs)()
 
         outputs = kernel(
             inputs=self.inputs,

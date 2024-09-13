@@ -19,7 +19,7 @@ python -m pip install git+https://github.com/ml-explore/mlx
 
 ```python
 import mlx.core as mx
-from utils import MetalProblem
+from utils import MetalKernel, MetalProblem
 ```
 
 ## Puzzle 1: Map
@@ -40,7 +40,7 @@ def map_test(a: mx.array):
         // FILL ME IN (roughly 1 line)
     """
 
-    kernel = mx.fast.metal_kernel(
+    kernel = MetalKernel(
         name="map",
         input_names=["a"],
         output_names=["out"],
@@ -86,7 +86,7 @@ def zip_test(a: mx.array, b: mx.array):
         // FILL ME IN (roughly 1 line)
     """
 
-    kernel = mx.fast.metal_kernel(
+    kernel = MetalKernel(
         name="zip",
         input_names=["a", "b"],
         output_names=["out"],
@@ -130,7 +130,7 @@ def map_guard_test(a: mx.array):
         // FILL ME IN (roughly 1-3 lines)
     """
 
-    kernel = mx.fast.metal_kernel(
+    kernel = MetalKernel(
         name="guard",
         input_names=["a"],
         output_names=["out"],
@@ -153,3 +153,11 @@ problem = MetalProblem(
     spec=map_spec
 )
 ```
+
+```python
+problem.check()
+```
+
+    Failed Tests.
+    Yours: [0. 0. 0. 0.]
+    Spec : [10 11 12 13]
