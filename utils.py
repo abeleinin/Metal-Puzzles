@@ -49,24 +49,33 @@ class MetalProblem:
         return outputs[0]
     
     def verify_metal_source(self):
-        metalkernel = self.fn(*self.inputs)
+        self.metalKernel = self.fn(*self.inputs)
 
         inputs = {}
         for i in range(len(self.inputs)):
             curr = self.inputs[i]
-            inputs[metalkernel.input_names[i]] = curr.reshape(curr.size).tolist()
-            inputs[metalkernel.input_names[i] + "_shape"] = curr.shape
+            inputs[self.metalKernel.input_names[i]] = curr.reshape(curr.size).tolist()
+            inputs[self.metalKernel.input_names[i] + "_shape"] = curr.shape
         
         outputs = {}
-        for i in range(len(metalkernel.output_names)):
+        for i in range(len(self.metalKernel.output_names)):
             out = mx.zeros(self.output_shapes)
-            outputs[metalkernel.output_names[i]] = out.reshape(out.size)
+            outputs[self.metalKernel.output_names[i]] = out.reshape(out.size)
 
-        verify_source(metalkernel.source, inputs, outputs, self.grid)
+        verify_source(self.metalKernel.source, inputs, outputs, self.grid)
 
     def check(self):
         try:
             if self.name in ["Map", "Zip", "Guard"]: self.verify_metal_source()
+
+            if os.getenv("MTL_CAPTURE_ENABLED") == '1':
+                mx.eval(*self.inputs)
+                
+                traceName = f"_{self.metalKernel.name}" if self.metalKernel else ""
+
+                mx.metal.start_capture(f"custom_kernel{traceName}.gputrace")
+                for _ in range(2): mx.eval(self.run_metal())
+                mx.metal.stop_capture()
 
             x = self.run_metal()
             y = self.spec(*self.inputs)
@@ -81,6 +90,7 @@ class MetalProblem:
 
         except AssertionError as e:
             print(f"Error: {e}")
+
 
 def preprocess_code(source):
     code_lines = source.strip().split('\n')
