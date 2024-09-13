@@ -66,7 +66,8 @@ class MetalProblem:
 
     def check(self):
         try:
-            if self.name in ["Map", "Zip", "Guard"]: self.verify_metal_source()
+            if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast"]: 
+                self.verify_metal_source()
 
             if os.getenv("MTL_CAPTURE_ENABLED") == '1':
                 mx.eval(*self.inputs)

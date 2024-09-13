@@ -150,7 +150,7 @@ def map_2D_test(a: mx.array):
 
 SIZE = 2
 a = mx.arange(SIZE * SIZE).reshape((SIZE, SIZE))
-output_shape = (SIZE,SIZE)
+output_shape = (SIZE, SIZE)
 
 problem = MetalProblem(
     "Map 2D",
@@ -159,6 +159,44 @@ problem = MetalProblem(
     output_shape,
     grid=(3,3,1), 
     spec=map_spec
+)
+
+problem.check()
+
+############################################################
+### Puzzle 5: Broadcast
+############################################################
+# Implement a kernel that adds `a` and `b` and stores it in `out`. 
+# Inputs `a` and `b` are arrays. You have more threads than positions.
+
+def broadcast_test(a: mx.array, b: mx.array):
+    source = """
+        uint thread_x = thread_position_in_grid.x;
+        uint thread_y = thread_position_in_grid.y;
+        // FILL ME IN (roughly 4 lines)
+    """
+
+    kernel = MetalKernel(
+        name="broadcast",
+        input_names=["a", "b"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 2
+a = mx.arange(SIZE).reshape(SIZE, 1)
+b = mx.arange(SIZE).reshape(1, SIZE)
+output_shape = (SIZE, SIZE)
+
+problem = MetalProblem(
+    "Broadcast",
+    broadcast_test,
+    [a, b], 
+    output_shape,
+    grid=(3,3,1), 
+    spec=zip_spec
 )
 
 problem.check()
