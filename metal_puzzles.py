@@ -43,7 +43,7 @@ problem = MetalProblem(
     [a], 
     output_shape,
     grid=(SIZE,1,1), 
-    threadgroup=(SIZE,1,1), 
+    threadgroup=(1,1,1), 
     spec=map_spec
 )
 
@@ -85,7 +85,7 @@ problem = MetalProblem(
     [a, b],
     output_shapes,
     grid=(SIZE,1,1),
-    threadgroup=(SIZE,1,1),
+    threadgroup=(1,1,1),
     spec=zip_spec
 )
 
@@ -122,7 +122,7 @@ problem = MetalProblem(
     [a], 
     output_shape,
     grid=(8,1,1), 
-    threadgroup=(8,1,1), 
+    threadgroup=(1,1,1), 
     spec=map_spec
 )
 
