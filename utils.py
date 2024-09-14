@@ -72,7 +72,7 @@ class MetalProblem:
             if os.getenv("MTL_CAPTURE_ENABLED") == '1':
                 mx.eval(*self.inputs)
                 
-                traceName = f"_{self.metalKernel.name}" if self.metalKernel else ""
+                traceName = f"_{self.metalKernel.name}" if hasattr(self, "metalKernel") else ""
 
                 mx.metal.start_capture(f"custom_kernel{traceName}.gputrace")
                 for _ in range(2): mx.eval(self.run_metal())

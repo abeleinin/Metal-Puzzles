@@ -243,3 +243,48 @@ problem = MetalProblem(
 ```python
 problem.check()
 ```
+
+## Puzzle 6: Threadgroup
+
+Implement a kernel that adds 10 to each position of `a` and stores it in `out`. You have fewer threads per threadgroup than the size of `a`, but more threads than positions.
+
+**Note:** A threadgroup is simply a group of threads within the thread grid. The number of threads per threadgroup is limited to a defined number, but we can have multiple different threadgroups. The Metal parameter `threadgroup_position_in_grid` tells us what threadgroup we are in.
+
+```python
+def map_threadgroup_test(a: mx.array):
+    source = """
+        uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
+        // FILL ME IN (roughly 1-3 lines)
+    """
+
+    kernel = MetalKernel(
+        name="threadgroup",
+        input_names=["a"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 9
+a = mx.arange(SIZE)
+output_shape = (SIZE,)
+
+problem = MetalProblem(
+    "Threadgroup",
+    map_threadgroup_test,
+    [a], 
+    output_shape,
+    grid=(12,1,1), 
+    threadgroup=(4,1,1),
+    spec=map_spec
+)
+```
+
+```python
+problem.check()
+```
+
+    Failed Tests.
+    Yours: [0. 0. 0. 0. 0. 0. 0. 0. 0.]
+    Spec : [10 11 12 13 14 15 16 17 18]
