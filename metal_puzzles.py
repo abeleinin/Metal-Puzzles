@@ -202,7 +202,7 @@ problem = MetalProblem(
 problem.check()
 
 ############################################################
-### Puzzle 5: Broadcast
+### Puzzle 6: Threadgroups
 ############################################################
 # Implement a kernel that adds 10 to each position of `a` and 
 # stores it in `out`. You have fewer threads per threadgroup 
@@ -221,7 +221,7 @@ def map_threadgroup_test(a: mx.array):
     """
 
     kernel = MetalKernel(
-        name="threadgroup",
+        name="threadgroups",
         input_names=["a"],
         output_names=["out"],
         source=source,
@@ -234,7 +234,7 @@ a = mx.arange(SIZE)
 output_shape = (SIZE,)
 
 problem = MetalProblem(
-    "Threadgroup",
+    "Threadgroups",
     map_threadgroup_test,
     [a], 
     output_shape,
