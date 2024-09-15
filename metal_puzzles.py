@@ -659,3 +659,81 @@ problem = MetalProblem(
 )
 
 problem.check()
+
+############################################################
+### Puzzle 14: Matrix Multiply!
+############################################################
+# Implement a kernel that multiplies square matrices `a` and `b`
+# and stores the result in `out`.
+# 
+# Tip: The most efficient algorithm will copy a block of data into 
+# `threadgroup` memory before computing each of the individual 
+# row-column dot products. This is straightforward if the matrix fits 
+# entirely in `threadgroup` memory (start by implementing that case first). 
+# Then, modify your code to compute partial dot products and iteratively 
+# move portions of the matrix into `threadgroup` memory. You should be 
+# able to handle the hard test in 6 device memory reads.
+
+def matmul_spec(a: mx.array, b: mx.array):
+    return a @ b
+
+def matmul_test(a: mx.array, b: mx.array):
+    header = """
+        constant uint THREADGROUP_MEM_SIZE = 3;
+    """
+
+    source = """
+        threadgroup float a_shared[THREADGROUP_MEM_SIZE][THREADGROUP_MEM_SIZE];
+        threadgroup float b_shared[THREADGROUP_MEM_SIZE][THREADGROUP_MEM_SIZE];
+
+        uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
+        uint j = threadgroup_position_in_grid.y * threads_per_threadgroup.y + thread_position_in_threadgroup.y;
+
+        uint local_i = thread_position_in_threadgroup.x;
+        uint local_j = thread_position_in_threadgroup.y;
+        // FILL ME IN (roughly 19 lines)
+    """
+
+    kernel = MetalKernel(
+        name="matmul",
+        input_names=["a", "b"],
+        output_names=["out"],
+        header=header,
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 2
+a = mx.arange(SIZE * SIZE, dtype=mx.float32).reshape((SIZE, SIZE))
+b = mx.arange(SIZE * SIZE, dtype=mx.float32).reshape((SIZE, SIZE)).T
+output_shape = (SIZE, SIZE)
+
+problem = MetalProblem(
+    "Matmul (Simple)",
+    matmul_test,
+    [a, b], 
+    output_shape,
+    grid=(3,3,1), 
+    threadgroup=(3,3,1),
+    spec=matmul_spec
+)
+
+problem.check()
+
+SIZE = 8
+a = mx.arange(SIZE * SIZE, dtype=mx.float32).reshape((SIZE, SIZE))
+b = mx.arange(SIZE * SIZE, dtype=mx.float32).reshape((SIZE, SIZE)).T
+output_shape = (SIZE, SIZE)
+
+problem = MetalProblem(
+    "Matmul (Full)",
+    matmul_test,
+    [a, b], 
+    output_shape,
+    grid=(9,9,1), 
+    threadgroup=(3,3,1),
+    spec=matmul_spec
+)
+
+problem.check()
