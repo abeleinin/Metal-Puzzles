@@ -473,6 +473,54 @@ Yours: array([0, 0, 0, 0, 0, 0, 0, 0], dtype=float32)
 Spec : array([0, 1, 3, 6, 9, 12, 15, 18], dtype=float32)
 ```
 
+## Puzzle 10: Dot Product
+
+Implement a kernel that computes the [dot product](https://en.wikipedia.org/wiki/Dot_product#Coordinate_definition) of `a` and `b` and stores it in `out`. You have 1 thread per position. You only need 2 global reads and 1 global write per thread.
+
+**Note**: For this problem you don't need to worry about number of read to the `threadgroup` memory. We will handle that challenge later.
+
+```python
+def dot_spec(a: mx.array, b: mx.array):
+    return a @ b
+
+def dot_test(a: mx.array, b: mx.array):
+    source = """
+        threadgroup float shared[8];
+        uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
+        uint local_i = thread_position_in_threadgroup.x;
+        // FILL ME IN (roughly 11 lines)
+    """
+
+    kernel = MetalKernel(
+        name="dot_product",
+        input_names=["a", "b"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 8
+a = mx.arange(SIZE, dtype=mx.float32)
+b = mx.arange(SIZE, dtype=mx.float32)
+output_shape = (1,)
+
+problem = MetalProblem(
+    "Dot Product",
+    dot_test,
+    [a, b], 
+    output_shape,
+    grid=(SIZE,1,1), 
+    threadgroup=(SIZE,1,1),
+    spec=dot_spec
+)
+```
+
+```python
+problem.check()
+```
+
 ## TODO
+
 - [ ] Add all puzzles
 - [ ] Metal Debugger Tutorial Section

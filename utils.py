@@ -34,9 +34,7 @@ class MetalProblem:
     def run_metal(self):
         assert mx.metal.is_available(), "Metal is not available"
 
-        kernel = self.fn(*self.inputs)()
-
-        outputs = kernel(
+        outputs = self.metalKernel()(
             inputs=self.inputs,
             grid=self.grid,
             threadgroup=self.threadgroup,
@@ -49,8 +47,6 @@ class MetalProblem:
         return outputs[0]
     
     def verify_metal_source(self):
-        self.metalKernel = self.fn(*self.inputs)
-
         inputs = {}
         for i in range(len(self.inputs)):
             curr = self.inputs[i]
@@ -66,15 +62,16 @@ class MetalProblem:
 
     def check(self):
         try:
+            self.metalKernel = self.fn(*self.inputs)
+
             if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast"]: 
                 self.verify_metal_source()
 
             if os.getenv("MTL_CAPTURE_ENABLED") == '1':
                 mx.eval(*self.inputs)
                 
-                traceName = f"_{self.metalKernel.name}" if hasattr(self, "metalKernel") else ""
-
-                mx.metal.start_capture(f"custom_kernel{traceName}.gputrace")
+                traceName = f"custom_kernel_{self.metalKernel.name}.gputrace"
+                mx.metal.start_capture(traceName)
                 for _ in range(2): mx.eval(self.run_metal())
                 mx.metal.stop_capture()
 
