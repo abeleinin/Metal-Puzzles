@@ -416,6 +416,63 @@ Yours: array([0, 0, 0, 0, 0, 0, 0, 0], dtype=float32)
 Spec : array([11, 11, 11, 11, 11, 11, 11, 11], dtype=float32)
 ```
 
+## Puzzle 9: Pooling
+
+Implement a kernel that sums together the last 3 position of `a` and stores it in `out`. You have 1 thread per position. 
+
+`threadgroup` memory is often faster than sharing data in `device` memory because it is locaed cloaser the the GPU's compute units. Be careful of uncessary reads and writes from global parameters (`a` and `out`) since their data is stored in `device` memory. You only need 1 global read and 1 global write per thread.
+
+Tip: Remember to be careful about syncing.
+
+```python
+def pooling_spec(a: mx.array):
+    out = mx.zeros(*a.shape)
+    for i in range(a.shape[0]):
+        out[i] = a[max(i - 2, 0) : i + 1].sum()
+    return out
+
+def pooling_test(a: mx.array):
+    source = """
+        threadgroup float shared[8];
+        uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
+        uint local_i = thread_position_in_threadgroup.x;
+        // FILL ME IN (roughly 11 lines)
+    """
+
+    kernel = MetalKernel(
+        name="pooling",
+        input_names=["a"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 8
+a = mx.arange(SIZE)
+output_shape = (SIZE,)
+
+problem = MetalProblem(
+    "Pooling",
+    pooling_test,
+    [a], 
+    output_shape,
+    grid=(SIZE,1,1), 
+    threadgroup=(SIZE,1,1),
+    spec=pooling_spec
+)
+```
+
+```
+problem.check()
+```
+
+```
+Failed Tests.
+Yours: array([0, 0, 0, 0, 0, 0, 0, 0], dtype=float32)
+Spec : array([0, 1, 3, 6, 9, 12, 15, 18], dtype=float32)
+```
+
 ## TODO
 - [ ] Add all puzzles
 - [ ] Metal Debugger Tutorial Section
