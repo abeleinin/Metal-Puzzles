@@ -532,3 +532,77 @@ problem = MetalProblem(
 )
 
 problem.check()
+
+############################################################
+### Puzzle 12: Prefix Sum
+############################################################
+# Implement a kernel that computes a sum over `a` and stores it 
+# in `out`. If the size of `a` is greater than the threadgroup 
+# size, only store the sum of each threadgroup;
+# 
+# We will do this using the parallel prefix sum algorithm in 
+# `threadgroup` memory. That is, each step of the algorithm 
+# should sum together half the remaining numbers.
+
+THREADGROUP_MEM_SIZE = 8
+def sum_spec(a: mx.array):
+    out = mx.zeros((a.shape[0] + THREADGROUP_MEM_SIZE - 1) // THREADGROUP_MEM_SIZE)
+    for j, i in enumerate(range(0, a.shape[-1], THREADGROUP_MEM_SIZE)):
+        out[j] = a[i : i + THREADGROUP_MEM_SIZE].sum()
+    return out
+
+def sum_test(a: mx.array):
+    header = """
+        constant uint THREADGROUP_MEM_SIZE = 8;
+    """
+
+    source = """
+        threadgroup float cache[THREADGROUP_MEM_SIZE];
+        uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
+        uint local_i = thread_position_in_threadgroup.x;
+        // FILL ME IN (roughly 14 lines)
+    """
+
+    kernel = MetalKernel(
+        name="prefix_sum",
+        input_names=["a"],
+        output_names=["out"],
+        header=header,
+        source=source,
+    )
+
+    return kernel
+
+# Test 1
+SIZE = 8
+a = mx.arange(SIZE)
+output_shape = (1,)
+
+problem = MetalProblem(
+    "Sum (Simple)",
+    sum_test,
+    [a], 
+    output_shape,
+    grid=(8,1,1), 
+    threadgroup=(8,1,1),
+    spec=sum_spec
+)
+
+problem.check()
+
+# Test 2
+SIZE = 15
+a = mx.arange(SIZE)
+output_shape = (2,)
+
+problem = MetalProblem(
+    "Sum (Full)",
+    sum_test,
+    [a], 
+    output_shape,
+    grid=(16,1,1), 
+    threadgroup=(8,1,1),
+    spec=sum_spec
+)
+
+problem.check()
