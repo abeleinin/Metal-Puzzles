@@ -545,13 +545,13 @@ problem.check()
 # should sum together half the remaining numbers.
 
 THREADGROUP_MEM_SIZE = 8
-def sum_spec(a: mx.array):
+def prefix_sum_spec(a: mx.array):
     out = mx.zeros((a.shape[0] + THREADGROUP_MEM_SIZE - 1) // THREADGROUP_MEM_SIZE)
     for j, i in enumerate(range(0, a.shape[-1], THREADGROUP_MEM_SIZE)):
         out[j] = a[i : i + THREADGROUP_MEM_SIZE].sum()
     return out
 
-def sum_test(a: mx.array):
+def prefix_sum_test(a: mx.array):
     header = """
         constant uint THREADGROUP_MEM_SIZE = 8;
     """
@@ -579,13 +579,13 @@ a = mx.arange(SIZE)
 output_shape = (1,)
 
 problem = MetalProblem(
-    "Sum (Simple)",
-    sum_test,
+    "Prefix Sum (Simple)",
+    prefix_sum_test,
     [a], 
     output_shape,
     grid=(8,1,1), 
     threadgroup=(8,1,1),
-    spec=sum_spec
+    spec=prefix_sum_spec
 )
 
 problem.check()
@@ -596,13 +596,66 @@ a = mx.arange(SIZE)
 output_shape = (2,)
 
 problem = MetalProblem(
-    "Sum (Full)",
-    sum_test,
+    "Prefix Sum (Full)",
+    prefix_sum_test,
     [a], 
     output_shape,
     grid=(16,1,1), 
     threadgroup=(8,1,1),
-    spec=sum_spec
+    spec=prefix_sum_spec
+)
+
+problem.check()
+
+############################################################
+### Puzzle 13: Axis Sum
+############################################################
+# Implement a kernel that computes a sum over each column of 
+# `a` and stores it in `out`.
+
+THREADGROUP_MEM_SIZE = 8
+def axis_sum_spec(a: mx.array):
+    out = mx.zeros((a.shape[0], (a.shape[1] + THREADGROUP_MEM_SIZE - 1) // THREADGROUP_MEM_SIZE))
+    for j, i in enumerate(range(0, a.shape[-1], THREADGROUP_MEM_SIZE)):
+        out[..., j] = a[..., i : i + THREADGROUP_MEM_SIZE].sum(-1)
+    return out
+
+def axis_sum_test(a: mx.array):
+    header = """
+        constant uint THREADGROUP_MEM_SIZE = 8;
+    """
+
+    source = """
+        threadgroup float cache[THREADGROUP_MEM_SIZE];
+        uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
+        uint local_i = thread_position_in_threadgroup.x;
+        uint batch = threadgroup_position_in_grid.y;
+        // FILL ME IN (roughly 16 lines)
+    """
+
+    kernel = MetalKernel(
+        name="axis_sum",
+        input_names=["a"],
+        output_names=["out"],
+        header=header,
+        source=source,
+    )
+
+    return kernel
+
+BATCH = 4
+SIZE = 6
+a = mx.arange(BATCH * SIZE).reshape((BATCH, SIZE))
+output_shape = (BATCH, 1)
+
+problem = MetalProblem(
+    "Axis Sum",
+    axis_sum_test,
+    [a], 
+    output_shape,
+    grid=(8,BATCH,1), 
+    threadgroup=(8,1,1),
+    spec=axis_sum_spec
 )
 
 problem.check()
