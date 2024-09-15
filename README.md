@@ -361,7 +361,7 @@ Spec : array([[11, 11, 11, 11, 11],
 
 Implement a kernel that adds 10 to each position of `a` and stores it in `out`. You have fewer threads per threadgroup than the size of `a`.
 
-**Warning**: Each threadgroup can only have a constant amount of threadgroup memory that the threads can read and write to. After writing to threadgroup memory, you need to call `threadgroup_barrier(mem_flags::mem_threadgroup)` to ensure that threads are synchronized.
+**Warning**: Each threadgroup can only have a constant amount of threadgroup memory that the threads can read and write to. After writing to threadgroup memory, you need to call `threadgroup_barrier(mem_flags::mem_threadgroup)` to ensure that threads are synchronized. `header` is add as a new parameter to the `MetalKernel` object, which simply defines values outside of the kernel body (often used for header imports).
 
 For more information read section [4.4 Threadgroup Address Space](https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf#page=86) and section [6.9 Synchronization and SIMD-Group Functions](https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf#page=177) in the Metal Shading Language Specification.
 
@@ -369,8 +369,12 @@ For more information read section [4.4 Threadgroup Address Space](https://develo
 
 ```python
 def shared_test(a: mx.array):
+    header = """
+        constant int threadgroup_mem_size = 4;
+    """
+
     source = """
-        threadgroup float shared[4];
+        threadgroup float shared[threadgroup_mem_size];
         uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
         uint local_i = thread_position_in_threadgroup.x;
 
@@ -386,6 +390,7 @@ def shared_test(a: mx.array):
         name="threadgroup_memory",
         input_names=["a"],
         output_names=["out"],
+        header=header,
         source=source,
     )
 
@@ -432,8 +437,12 @@ def pooling_spec(a: mx.array):
     return out
 
 def pooling_test(a: mx.array):
+    header = """
+        constant int threadgroup_mem_size = 8;
+    """
+
     source = """
-        threadgroup float shared[8];
+        threadgroup float shared[threadgroup_mem_size];
         uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
         uint local_i = thread_position_in_threadgroup.x;
         // FILL ME IN (roughly 11 lines)
@@ -443,6 +452,7 @@ def pooling_test(a: mx.array):
         name="pooling",
         input_names=["a"],
         output_names=["out"],
+        header=header,
         source=source,
     )
 
@@ -484,8 +494,12 @@ def dot_spec(a: mx.array, b: mx.array):
     return a @ b
 
 def dot_test(a: mx.array, b: mx.array):
+    header = """
+        constant int threadgroup_mem_size = 8;
+    """
+
     source = """
-        threadgroup float shared[8];
+        threadgroup float shared[threadgroup_mem_size];
         uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
         uint local_i = thread_position_in_threadgroup.x;
         // FILL ME IN (roughly 11 lines)
@@ -495,6 +509,7 @@ def dot_test(a: mx.array, b: mx.array):
         name="dot_product",
         input_names=["a", "b"],
         output_names=["out"],
+        header=header,
         source=source,
     )
 

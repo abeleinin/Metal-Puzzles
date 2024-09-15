@@ -11,6 +11,7 @@ class MetalKernel:
     name: str
     input_names: List[str]
     output_names: List[str]
+    header: str = ""
     source: str
 
     def __call__(self):
@@ -18,6 +19,7 @@ class MetalKernel:
             name=self.name,
             input_names=self.input_names,
             output_names=self.output_names,
+            header=self.header,
             source=self.source,
         )
 
