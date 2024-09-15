@@ -282,3 +282,62 @@ problem = MetalProblem(
 )
 
 problem.check()
+
+############################################################
+### Puzzle 8: Threadgroup Memory
+############################################################
+# Implement a kernel that adds 10 to each position of `a` and 
+# stores it in `out`. You have fewer threads per block than 
+# the size of `a`.
+# 
+# Warning: Each threadgroup can only have a constant amount of 
+# threadgroup memory that threads in that threadgroup can read 
+# and write to. After writing to threadgroup memory, you need 
+# to call `threadgroup_barrier(mem_flags::mem_threadgroup)` to 
+# ensure that threads are synchronized.
+#
+# For more information read section 4.4 "Threadgroup Address Space" 
+# and section 6.9 "Synchronization and SIMD-Group Functions" in the 
+# Metal Shading Language Specification.
+#
+# (This example does not really need threadgroup memory or synchronization, 
+# but it is a demo.)
+
+def shared_test(a: mx.array):
+    source = """
+        threadgroup float shared[4];
+        uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
+        uint local_i = thread_position_in_threadgroup.x;
+
+        if (i < a_shape[0]) {
+            shared[local_i] = a[i];
+            threadgroup_barrier(mem_flags::mem_threadgroup);
+        }
+
+        // FILL ME IN (roughly 1-3 lines)
+    """
+
+    kernel = MetalKernel(
+        name="threadgroup_memory",
+        input_names=["a"],
+        output_names=["out"],
+        source=source,
+    )
+
+    return kernel
+
+SIZE = 8
+a = mx.ones(SIZE)
+output_shape = (SIZE,)
+
+problem = MetalProblem(
+    "Threadgroup Memory",
+    shared_test,
+    [a], 
+    output_shape,
+    grid=(SIZE,1,1), 
+    threadgroup=(4,1,1),
+    spec=map_spec
+)
+
+problem.check()
