@@ -370,11 +370,11 @@ For more information read section [4.4 Threadgroup Address Space](https://develo
 ```python
 def shared_test(a: mx.array):
     header = """
-        constant int threadgroup_mem_size = 4;
+        constant uint THREADGROUP_MEM_SIZE = 4;
     """
 
     source = """
-        threadgroup float shared[threadgroup_mem_size];
+        threadgroup float shared[THREADGROUP_MEM_SIZE];
         uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
         uint local_i = thread_position_in_threadgroup.x;
 
@@ -438,11 +438,11 @@ def pooling_spec(a: mx.array):
 
 def pooling_test(a: mx.array):
     header = """
-        constant int threadgroup_mem_size = 8;
+        constant uint THREADGROUP_MEM_SIZE = 8;
     """
 
     source = """
-        threadgroup float shared[threadgroup_mem_size];
+        threadgroup float shared[THREADGROUP_MEM_SIZE];
         uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
         uint local_i = thread_position_in_threadgroup.x;
         // FILL ME IN (roughly 11 lines)
@@ -495,11 +495,11 @@ def dot_spec(a: mx.array, b: mx.array):
 
 def dot_test(a: mx.array, b: mx.array):
     header = """
-        constant int threadgroup_mem_size = 8;
+        constant uint THREADGROUP_MEM_SIZE = 8;
     """
 
     source = """
-        threadgroup float shared[threadgroup_mem_size];
+        threadgroup float shared[THREADGROUP_MEM_SIZE];
         uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
         uint local_i = thread_position_in_threadgroup.x;
         // FILL ME IN (roughly 11 lines)
@@ -533,6 +533,95 @@ problem = MetalProblem(
 
 ```python
 problem.check()
+```
+
+## Puzzle 11: 1D Convolution
+
+Implement a kernel that computes a 1D convolution between `a` and `b` and stores it in `out`. You need to handle the general case. You only need 2 global reads and 1 global write per thread.
+
+```python
+def conv_spec(a: mx.array, b: mx.array):
+    out = mx.zeros(*a.shape)
+    len = b.shape[0]
+    for i in range(a.shape[0]):
+        out[i] = sum([a[i + j] * b[j] for j in range(len) if i + j < a.shape[0]])
+    return out
+
+def conv_test(a: mx.array, b: mx.array):
+    header = """
+        constant uint THREADGROUP_MEM_SIZE = 8;
+        constant uint MAX_CONV = 4;
+    """
+
+    source = """
+        uint i = threadgroup_position_in_grid.x * threads_per_threadgroup.x + thread_position_in_threadgroup.x;
+        uint local_i = thread_position_in_threadgroup.x;
+        // FILL ME IN (roughly 24 lines)
+    """
+
+    kernel = MetalKernel(
+        name="1D_conv",
+        input_names=["a", "b"],
+        output_names=["out"],
+        header=header,
+        source=source,
+    )
+
+    return kernel
+
+# Test 1
+SIZE = 6
+CONV = 3
+a = mx.arange(SIZE, dtype=mx.float32)
+b = mx.arange(CONV, dtype=mx.float32)
+output_shape = (SIZE,)
+
+problem = MetalProblem(
+    "1D Conv (Simple)",
+    conv_test,
+    [a, b], 
+    output_shape,
+    grid=(8,1,1), 
+    threadgroup=(8,1,1),
+    spec=conv_spec
+)
+```
+
+```python
+problem.check()
+```
+
+```
+Failed Tests.
+Yours: array([0, 0, 0, 0, 0, 0], dtype=float32)
+Spec : array([ 5, 8, 11, 14, 5, 0], dtype=float32)
+```
+
+```python
+# Test 2
+a = mx.arange(15, dtype=mx.float32)
+b = mx.arange(4, dtype=mx.float32)
+output_shape = (15,)
+
+problem = MetalProblem(
+    "1D Conv (Full)",
+    conv_test,
+    [a, b], 
+    output_shape,
+    grid=(16,1,1), 
+    threadgroup=(8,1,1),
+    spec=conv_spec
+)
+```
+
+```python
+problem.check()
+```
+
+```
+Failed Tests.
+Yours: array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=float32)
+Spec : array([14, 20, 26, 32, 38, 44, 50, 56, 62, 68, 74, 80, 41, 14, 0], dtype=float32)
 ```
 
 ## TODO

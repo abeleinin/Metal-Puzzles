@@ -12,7 +12,7 @@ class MetalKernel:
     input_names: List[str]
     output_names: List[str]
     header: str = ""
-    source: str
+    source: str = ""
 
     def __call__(self):
         return mx.fast.metal_kernel(
