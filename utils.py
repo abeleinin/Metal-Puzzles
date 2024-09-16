@@ -44,6 +44,7 @@ class MetalProblem:
             output_dtypes=[mx.float32],
             stream=mx.gpu,
             verbose=os.getenv("VERBOSE")=='1',
+            init_value=0,
         )
 
         return outputs[0]

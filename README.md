@@ -1,6 +1,6 @@
 # Metal Puzzles
 
-Port of [srush/GPU-Puzzles](https://github.com/srush/GPU-Puzzles) to [Metal](https://en.wikipedia.org/wiki/Metal_(API)) using [MLX custom_kernels](https://ml-explore.github.io/mlx/build/html/dev/custom_metal_kernels.html). Inspired by [@awnihannun](https://x.com/awnihannun/status/1833376670063202536)!
+Port of [srush/GPU-Puzzles](https://github.com/srush/GPU-Puzzles) to [Metal](https://en.wikipedia.org/wiki/Metal_(API)) using [MLX Custom Kernals](https://ml-explore.github.io/mlx/build/html/dev/custom_metal_kernels.html). Inspired by [@awnihannun](https://x.com/awnihannun/status/1833376670063202536)!
 
 ![Metal Puzzles Logo](/metal_puzzles.png)
 
@@ -148,7 +148,7 @@ output_shape = (SIZE,)
 
 problem = MetalProblem(
     "Guard",
-    map_test,
+    map_guard_test,
     [a], 
     output_shape,
     grid=(8,1,1), 

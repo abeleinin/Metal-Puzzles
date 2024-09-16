@@ -123,7 +123,7 @@ output_shape = (SIZE,)
 
 problem = MetalProblem(
     "Guard",
-    map_test,
+    map_guard_test,
     [a], 
     output_shape,
     grid=(8,1,1), 
@@ -715,6 +715,7 @@ def matmul_test(a: mx.array, b: mx.array):
 
     return kernel
 
+# Test 1
 SIZE = 2
 a = mx.arange(SIZE * SIZE, dtype=mx.float32).reshape((SIZE, SIZE))
 b = mx.arange(SIZE * SIZE, dtype=mx.float32).reshape((SIZE, SIZE)).T
@@ -732,6 +733,7 @@ problem = MetalProblem(
 
 problem.check()
 
+# Test 2
 SIZE = 8
 a = mx.arange(SIZE * SIZE, dtype=mx.float32).reshape((SIZE, SIZE))
 b = mx.arange(SIZE * SIZE, dtype=mx.float32).reshape((SIZE, SIZE)).T
