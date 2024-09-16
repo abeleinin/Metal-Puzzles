@@ -94,6 +94,13 @@ problem.check()
 ############################################################
 # Implement a kernel that adds 10 to each position of `a` and 
 # stores it in `out`. You have more threads than positions.
+#
+# Warning: Be careful of out-of-bounds access.
+# 
+# Note: You can append `_shape`, `_strides`, or `_ndim` to any 
+# input parameter to automatically add that data as a paramter 
+# to your kerenls. So, in the following puzzle you could use 
+# `a_shape`, `a_strides`, or `a_ndim`.
 
 def map_guard_test(a: mx.array):
     source = """
@@ -131,6 +138,9 @@ problem.check()
 # Implement a kernel that adds 10 to each position of `a` and 
 # stores it in `out`. Input `a` is 2D and square. You have more 
 # threads than positions.
+# 
+# Note: All memory in Metal is represented as a 1D array, so 
+# direct 2D indexing is not supported.
 
 def map_2D_test(a: mx.array):
     source = """
@@ -290,20 +300,21 @@ problem.check()
 # stores it in `out`. You have fewer threads per block than 
 # the size of `a`.
 # 
-# Warning: Each threadgroup can only have a constant amount of 
-# `threadgroup` memory that threads in that threadgroup can read 
-# and write to. After writing to `threadgroup` memory, you need 
-# to call `threadgroup_barrier(mem_flags::mem_threadgroup)` to 
-# ensure that threads are synchronized. `header` is add as a new 
-# parameter to the `MetalKernel` object, which simply defines values 
-# outside of the kernel body (often used to include header files).
+# Warning: Each threadgroup can only have a *constant* amount 
+# of threadgroup memory that the threads can read and write to. 
+# After writing to threadgroup memory, you need to call 
+# `threadgroup_barrier(mem_flags::mem_threadgroup)` to ensure 
+# that threads are synchronized. In this puzzle we add the `header` 
+# variable as a new parameter to the `MetalKernel` object, which 
+# simply defines values outside of the kernel body (often used 
+# for header imports).
 #
 # For more information read section 4.4 "Threadgroup Address Space" 
 # and section 6.9 "Synchronization and SIMD-Group Functions" in the 
 # Metal Shading Language Specification.
 #
 # (This example does not really need threadgroup memory or synchronization, 
-# but it is a demo.)
+# but it's a demo.)
 
 def shared_test(a: mx.array):
     header = """
@@ -355,10 +366,10 @@ problem.check()
 # Implement a kernel that sums together the last 3 position of 
 # `a` and stores it in `out`. You have 1 thread per position. 
 # 
-# `threadgroup` memory is often faster than sharing data in 
-# `device` memory because it is located closer the the GPU's 
+# Note: `threadgroup` memory is often faster than sharing data
+# in `device` memory because it is located closer the the GPU's 
 # compute units. Be careful of uncessary reads and writes from 
-# global parameters (`a` and `out`) since their data is stored 
+# global parameters (`a` and `out`), since their data is stored 
 # in `device` memory. You only need 1 global read and 1 global 
 # write per thread.
 #
@@ -416,7 +427,7 @@ problem.check()
 # need 2 global reads and 1 global write per thread.
 #
 # Note: For this problem you don't need to worry about number 
-# of read to the `threadgroup` memory. We will handle that 
+# of reads to the `threadgroup` memory. We will handle that 
 # challenge later.
 
 def dot_spec(a: mx.array, b: mx.array):
@@ -538,11 +549,11 @@ problem.check()
 ############################################################
 # Implement a kernel that computes a sum over `a` and stores it 
 # in `out`. If the size of `a` is greater than the threadgroup 
-# size, only store the sum of each threadgroup;
+# size, only store the sum of each threadgroup.
 # 
 # We will do this using the parallel prefix sum algorithm in 
-# `threadgroup` memory. That is, each step of the algorithm 
-# should sum together half the remaining numbers.
+# `threadgroup` memory. In each step, the algorithm will sum 
+# half of the remaining elements together.
 
 THREADGROUP_MEM_SIZE = 8
 def prefix_sum_spec(a: mx.array):
@@ -610,8 +621,8 @@ problem.check()
 ############################################################
 ### Puzzle 13: Axis Sum
 ############################################################
-# Implement a kernel that computes a sum over each column of 
-# `a` and stores it in `out`.
+# Implement a kernel that computes the sum over each column 
+# in the input array `a` and stores it in `out`.
 
 THREADGROUP_MEM_SIZE = 8
 def axis_sum_spec(a: mx.array):

@@ -4,9 +4,9 @@ Port of [srush/GPU-Puzzles](https://github.com/srush/GPU-Puzzles) to [Metal](htt
 
 ![Metal Puzzles Logo](/metal_puzzles.png)
 
-If you're interested in learning GPU programming on an Apple Silicon computer, this is a great repository for you! Whether you're new to GPU programming or have exerpience with CUDA, these puzzles provide an accessible way to learn GPU programming on Apple Silicon.
+GPUs have become crucial in machine learning due to their ability to process data on a massively parallel scale. While it's possible to become an expert in machine learning without writing any GPU code, building intuition is challenging when you're only working through layers of abstraction. Additionally, as models grow more complex, the need for developers to write efficient, high-performance kernels (GPU functions) becomes increasingly important to fully leverage the power of modern hardware.
 
-In the following exercises, you'll use the `mx.fast.metal_kernel()` function from Apple's [mlx](https://github.com/ml-explore/mlx) framework, which allows you to write custom Metal kernels through a Python/C++ API. The function takes a `source` string, which defines the Metal kernel body using the Metal Shading Language. 
+Whether you're new to GPU programming or have exerpience with CUDA, the following puzzles provide a straightforward way to learn on an Apple Silicon computer. In the following exercises, you'll use the `mx.fast.metal_kernel()` function from Apple's [mlx](https://github.com/ml-explore/mlx) framework, which allows you to write custom Metal kernels through a Python/C++ API. For verification purposes, I've created a wrapper class around `mx.fast.metal_kernel()` called `MetalKernel`, but the interface remains identical.
 
 If you're interested in more material, check out the [MLX Custom Metal Kernels Documentation](https://ml-explore.github.io/mlx/build/html/dev/custom_metal_kernels.html) and the [Metal Shading Language specification](https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf).
 
@@ -23,7 +23,7 @@ from utils import MetalKernel, MetalProblem
 
 Implement a "kernel" (GPU function) that adds 10 to each position of the array `a` and stores it in the array `out`.  You have 1 thread per position.
 
-**Note:** The `source` string below is the body of your Metal kernel, the function signature with be automatically generated for you. Below you'll notice the `input_names` and `output_names` parameters. These define the parameters for your Metal kernel.
+**Note:** The `source` string below is the body of your Metal kernel, the function signature will be automatically generated for you. Below you'll notice the `input_names` and `output_names` parameters. These define the parameters for your Metal kernel.
 
 To print out the generated Metal kernel set the environment variable `VERBOSE=1`.
 
@@ -72,7 +72,7 @@ Spec : array([10, 11, 12, 13], dtype=int32)
 
 ## Puzzle 2: Zip 
 
-Implement a kernel that takes two arrays `a` and `b`, adds each element together, and stores the result in an output array `out`. You have 1 thread per position.
+Implement a kernel that takes two arrays `a` and `b`, adds each element together, and stores the result in the output array `out`. You have 1 thread per position.
 
 ```python
 def zip_spec(a: mx.array, b: mx.array):
@@ -122,6 +122,10 @@ Spec : array([0, 2, 4, 6], dtype=int32)
 
 Implement a kernel that adds 10 to each position of `a` and stores it in `out`. You have more threads than positions.
 
+**Warning:** Be careful of out-of-bounds access.
+
+**Note:** You can append `_shape`, `_strides`, or `_ndim` to any input parameter to automatically add that data as a paramter to your kerenls. So, in the following puzzle you could use `a_shape`, `a_strides`, or `a_ndim`.
+
 ```python
 def map_guard_test(a: mx.array):
     source = """
@@ -165,6 +169,8 @@ Spec : array([10, 11, 12, 13], dtype=int32)
 ## Puzzle 4: Map 2D
 
 Implement a kernel that adds 10 to each position of `a` and stores it in `out`. Input `a` is 2D and square. You have more threads than positions.
+
+**Note:** All memory in Metal is represented as a 1D array, so direct 2D indexing is not supported.
 
 ```python
 def map_2D_test(a: mx.array):
@@ -361,11 +367,11 @@ Spec : array([[11, 11, 11, 11, 11],
 
 Implement a kernel that adds 10 to each position of `a` and stores it in `out`. You have fewer threads per threadgroup than the size of `a`.
 
-**Warning**: Each threadgroup can only have a constant amount of threadgroup memory that the threads can read and write to. After writing to threadgroup memory, you need to call `threadgroup_barrier(mem_flags::mem_threadgroup)` to ensure that threads are synchronized. `header` is add as a new parameter to the `MetalKernel` object, which simply defines values outside of the kernel body (often used for header imports).
+**Warning**: Each threadgroup can only have a *constant* amount of threadgroup memory that the threads can read and write to. After writing to threadgroup memory, you need to call `threadgroup_barrier(mem_flags::mem_threadgroup)` to ensure that threads are synchronized. In this puzzle we add the `header` variable as a new parameter to the `MetalKernel` object, which simply defines values outside of the kernel body (often used for header imports).
 
 For more information read section [4.4 Threadgroup Address Space](https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf#page=86) and section [6.9 Synchronization and SIMD-Group Functions](https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf#page=177) in the Metal Shading Language Specification.
 
-(This example does not really need threadgroup memory or synchronization, but it is a demo.)
+(This example does not really need threadgroup memory or synchronization, but it's a demo.)
 
 ```python
 def shared_test(a: mx.array):
@@ -425,9 +431,9 @@ Spec : array([11, 11, 11, 11, 11, 11, 11, 11], dtype=float32)
 
 Implement a kernel that sums together the last 3 position of `a` and stores it in `out`. You have 1 thread per position. 
 
-`threadgroup` memory is often faster than sharing data in `device` memory because it is locaed cloaser the the GPU's compute units. Be careful of uncessary reads and writes from global parameters (`a` and `out`) since their data is stored in `device` memory. You only need 1 global read and 1 global write per thread.
+**Note:** `threadgroup` memory is often faster than sharing data in `device` memory because it is located closer the the GPU's compute units. Be careful of uncessary reads and writes from global parameters (`a` and `out`), since their data is stored in `device` memory. You only need 1 global read and 1 global write per thread.
 
-Tip: Remember to be careful about syncing.
+**Tip:** Remember to be careful about syncing.
 
 ```python
 def pooling_spec(a: mx.array):
@@ -487,7 +493,7 @@ Spec : array([0, 1, 3, 6, 9, 12, 15, 18], dtype=float32)
 
 Implement a kernel that computes the [dot product](https://en.wikipedia.org/wiki/Dot_product#Coordinate_definition) of `a` and `b` and stores it in `out`. You have 1 thread per position. You only need 2 global reads and 1 global write per thread.
 
-**Note**: For this problem you don't need to worry about number of read to the `threadgroup` memory. We will handle that challenge later.
+**Note**: For this problem you don't need to worry about number of reads to the `threadgroup` memory. We will handle that challenge later.
 
 ```python
 def dot_spec(a: mx.array, b: mx.array):
@@ -626,9 +632,9 @@ Spec : array([14, 20, 26, 32, 38, 44, 50, 56, 62, 68, 74, 80, 41, 14, 0], dtype=
 
 ## Puzzle 12: Prefix Sum
 
-Implement a kernel that computes a sum over `a` and stores it in `out`. If the size of `a` is greater than the threadgroup size, only store the sum of each threadgroup;
+Implement a kernel that computes a sum over `a` and stores it in `out`. If the size of `a` is greater than the threadgroup size, only store the sum of each threadgroup.
 
-We will do this using the [parallel prefix sum](https://en.wikipedia.org/wiki/Prefix_sum#Parallel_algorithms) algorithm in `threadgroup` memory. That is, each step of the algorithm should sum together half the remaining numbers.
+We will do this using the [parallel prefix sum](https://en.wikipedia.org/wiki/Prefix_sum#Parallel_algorithms) algorithm in `threadgroup` memory. In each step, the algorithm will sum half of the remaining elements together.
 
 ```python
 THREADGROUP_MEM_SIZE = 8
@@ -715,7 +721,7 @@ Spec : array([28, 77], dtype=float32)
 
 ## Puzzle 13: Axis Sum
 
-Implement a kernel that computes a sum over each column of `a` and stores it in `out`.
+Implement a kernel that computes the sum over each column in the input array `a` and stores it in `out`.
 
 ```python
 THREADGROUP_MEM_SIZE = 8
