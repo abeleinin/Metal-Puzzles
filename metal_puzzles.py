@@ -13,7 +13,9 @@ from utils import MetalProblem, MetalKernel
 # notice the `input_names` and `output_names` parameters. These define the 
 # parameters for your Metal kernel.
 # 
-# To print out the generated Metal kernel set the environment variable `VERBOSE=1`.
+# Tip: If you need a tool for debugging your kernel read the Metal Debugger
+# section at the bottom of the README. Also, you can print out the generated 
+# Metal kernel by setting the environment variable `VERBOSE=1`.
 
 def map_spec(a: mx.array):
     return a + 10

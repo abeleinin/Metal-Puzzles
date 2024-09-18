@@ -1,8 +1,8 @@
 # Metal Puzzles
 
-Port of [srush/GPU-Puzzles](https://github.com/srush/GPU-Puzzles) to [Metal](https://en.wikipedia.org/wiki/Metal_(API)) using [MLX Custom Kernals](https://ml-explore.github.io/mlx/build/html/dev/custom_metal_kernels.html). Inspired by [@awnihannun](https://x.com/awnihannun/status/1833376670063202536)!
+Port of [srush/GPU-Puzzles](https://github.com/srush/GPU-Puzzles) to [Metal](https://en.wikipedia.org/wiki/Metal_API) using [MLX Custom Kernals](https://ml-explore.github.io/mlx/build/html/dev/custom_metal_kernels.html). Inspired by [@awnihannun](https://x.com/awnihannun/status/1833376670063202536)!
 
-![Metal Puzzles Logo](/metal_puzzles.png)
+![Metal Puzzles Logo](./imgs/metal_puzzles.png)
 
 GPUs are crucial in machine learning because they can process data on a massively parallel scale. While it's possible to become an expert in machine learning without writing any GPU code, building intuition is challenging when you're only working through layers of abstraction. Additionally, as models grow in complexity, the need for developers to write efficient, high-performance kernels becomes increasingly important to leverage the power of modern hardware.
 
@@ -25,7 +25,7 @@ Implement a "kernel" (GPU function) that adds 10 to each position of the array `
 
 **Note:** The `source` string below is the body of your Metal kernel, the function signature will be automatically generated for you. Below you'll notice the `input_names` and `output_names` parameters. These define the parameters for your Metal kernel.
 
-To print out the generated Metal kernel set the environment variable `VERBOSE=1`.
+**Tip:** If you need a tool for debugging your Kernel read the [Metal Debugger](#metal-debugger) section below. Also, you can print out the generated Metal kernel by setting the environment variable `VERBOSE=1`.
 
 ```python
 def map_spec(a: mx.array):
@@ -894,7 +894,30 @@ Spec : array([[  140,   364,   588,   812,  1036,  1260,  1484,  1708]
        [ 1708,  5516,  9324, 13132, 16940, 20748, 24556, 28364]], dtype=float32)
 ```
 
-## TODO
+## Metal Debugger
 
-- [X] Add all puzzles
-- [ ] Metal Debugger Tutorial Section
+A useful resource when writing Metal code is the Metal Debugger in Xcode. You can capture GPU work from any kernel by setting the environment variable `MTL_CAPTURE_ENABLED=1`. This will generate a `.gputrace` file, which you can open in Xcode by running:
+
+```sh
+open custom_kernel.gputrace
+```
+
+Once opened you'll be able to profile the GPU trace to view its performance. Here is a basic guide to locate the kernel debugger and view kernel statistics. 
+
+First select `Group By Pipeline State` on the left sidebar, which will simplify locating the custom kernels `Compute Pipeline`.
+
+![](/imgs/metal-debugger-1.png)
+
+Next, local which `Compute Pipeline` contains to your custom kernel (all generated kernels will be prefixed with `custom_kernel_{name}`).
+
+![](/imgs/metal-debugger-2.png)
+
+If you click on the kernel name on the left sidebar you'll be shown your kernel code. From this page, you can select the bug icon to begin a step debugger for each GPU thread or view statistics for different parts of your kernel.
+
+![](/imgs/metal-debugger-3.png)
+
+If you can hover over one of the orange circles, you can view its `Runtime Statistics`.
+
+![](/imgs/metal-debugger-4.png)
+
+More information about the debugger can be found on the [MLX Metal Debugger](https://ml-explore.github.io/mlx/build/html/dev/metal_debugger.html) documentation or in the [Metal Debugger Apple Developer](https://developer.apple.com/documentation/xcode/metal-debugger) documentation.
