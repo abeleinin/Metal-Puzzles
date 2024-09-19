@@ -67,11 +67,19 @@ class MetalProblem:
         locals().update(inputs)
         locals().update(outputs)
 
+        threads_per_threadgroup_x = self.threadgroup[0]
+        threads_per_threadgroup_y = self.threadgroup[1]
+        threads_per_threadgroup_z = self.threadgroup[2]
+
         metal_py = convert_source_to_py(self.metalKernel.source)
-        for x in range(self.grid[0]):
-            thread_position_in_grid_x = x
-            for y in range(self.grid[1]):
-                thread_position_in_grid_y = y
+        for grid_x in range(self.grid[0]):
+            thread_position_in_grid_x = grid_x
+            for grid_y in range(self.grid[1]):
+                thread_position_in_grid_y = grid_y
+                threadgroup_position_in_grid_x = grid_x // self.threadgroup[0]
+                thread_position_in_threadgroup_x = grid_x % self.threadgroup[0]
+                threadgroup_position_in_grid_y = grid_y // self.threadgroup[1]
+                thread_position_in_threadgroup_y = grid_y % self.threadgroup[1]
                 exec(metal_py)
                 for name in self.metalKernel.input_names:
                     locals()[name].set_max()
@@ -92,7 +100,7 @@ class MetalProblem:
     
     def show(self):
         self.metalKernel = self.fn(*self.inputs)
-        if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast"]:
+        if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast", "Threadgroups", "Threadgroups 2D"]:
             print(self.score())
         else:
             print(f"MetalProblem.show() is unavaiable for the '{self.name}' kernel.")
@@ -101,7 +109,7 @@ class MetalProblem:
         try:
             self.metalKernel = self.fn(*self.inputs)
 
-            if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast"]:
+            if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast", "Threadgroups", "Threadgroups 2D"]:
                 score = self.score()
 
             if os.getenv("MTL_CAPTURE_ENABLED") == '1':

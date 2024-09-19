@@ -343,6 +343,15 @@ problem = MetalProblem(
     threadgroup=(4,1,1),
     spec=map_spec
 )
+problem.show()
+```
+
+```
+# Threadgroups
+
+    Score (Max Per Thread):
+    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+    |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -388,6 +397,15 @@ problem = MetalProblem(
     threadgroup=(3,3,1),
     spec=map_spec
 )
+problem.show()
+```
+
+```
+# Threadgroups 2D
+
+    Score (Max Per Thread):
+    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+    |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
