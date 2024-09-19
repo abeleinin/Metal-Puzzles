@@ -58,6 +58,15 @@ problem = MetalProblem(
     grid=(SIZE,1,1), 
     spec=map_spec
 )
+problem.show()
+```
+
+```
+# Map
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -106,6 +115,15 @@ problem = MetalProblem(
     grid=(SIZE,1,1),
     spec=zip_spec
 )
+problem.show()
+```
+
+```
+# Zip
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -154,6 +172,15 @@ problem = MetalProblem(
     grid=(8,1,1), 
     spec=map_spec
 )
+problem.show()
+```
+
+```
+# Guard
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -201,6 +228,15 @@ problem = MetalProblem(
     grid=(3,3,1), 
     spec=map_spec
 )
+problem.show()
+```
+
+```
+# Map 2D
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -249,6 +285,15 @@ problem = MetalProblem(
     grid=(3,3,1), 
     spec=zip_spec
 )
+problem.show()
+```
+
+```
+# Broadcast
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python

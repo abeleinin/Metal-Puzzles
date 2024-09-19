@@ -49,26 +49,60 @@ class MetalProblem:
 
         return outputs[0]
     
-    def verify_metal_source(self):
+    def score(self):
         inputs = {}
         for i in range(len(self.inputs)):
             curr = self.inputs[i]
-            inputs[self.metalKernel.input_names[i]] = curr.reshape(curr.size).tolist()
-            inputs[self.metalKernel.input_names[i] + "_shape"] = curr.shape
+            name = self.metalKernel.input_names[i]
+            inputs[name] = TrackedArray(name, curr.reshape(curr.size))
+            inputs[name + "_shape"] = curr.shape
+            inputs[name + "_ndim"] = curr.ndim
+            inputs[name + "_strides"] = mx.array([curr.shape[0], 1])
         
         outputs = {}
-        for i in range(len(self.metalKernel.output_names)):
-            out = mx.zeros(self.output_shapes)
-            outputs[self.metalKernel.output_names[i]] = out.reshape(out.size)
+        for name in self.metalKernel.output_names:
+            temp = mx.zeros(self.output_shapes)
+            outputs[name] = TrackedArray(name, temp.reshape(temp.size))
 
-        verify_source(self.metalKernel.source, inputs, outputs, self.grid)
+        locals().update(inputs)
+        locals().update(outputs)
+
+        metal_py = convert_source_to_py(self.metalKernel.source)
+        for x in range(self.grid[0]):
+            thread_position_in_grid_x = x
+            for y in range(self.grid[1]):
+                thread_position_in_grid_y = y
+                exec(metal_py)
+                for name in self.metalKernel.input_names:
+                    locals()[name].set_max()
+                for name in self.metalKernel.output_names:
+                    locals()[name].set_max()
+
+        full = {'in_reads' : 0, 'out_writes' : 0, 'shared_reads' : 0, 'shared_writes' : 0}
+        for name in self.metalKernel.input_names:
+            full['in_reads'] = max(locals()[name].get_reads(), full['in_reads'])
+        for name in self.metalKernel.output_names:
+            full['out_writes'] = locals()[name].get_writes()
+        return (f"""# {self.name}
+
+    Score (Max Per Thread):
+    | {'Global Reads':>13} | {'Global Writes':>13} | {'Shared Reads' :>13} | {'Shared Writes' :>13} |
+    | {full['in_reads']:>13} | {full['out_writes']:>13} | {full['shared_reads']:>13} | {full['shared_writes']:>13} | 
+        """) 
+    
+    def show(self):
+        self.metalKernel = self.fn(*self.inputs)
+        if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast"]:
+            print(self.score())
+        else:
+            print(f"MetalProblem.show() is unavaiable for the '{self.name}' kernel.")
 
     def check(self):
         try:
             self.metalKernel = self.fn(*self.inputs)
 
-            if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast"]: 
-                self.verify_metal_source()
+            if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast"]:
+                score = self.score()
 
             if os.getenv("MTL_CAPTURE_ENABLED") == '1':
                 mx.eval(*self.inputs)
@@ -93,175 +127,109 @@ class MetalProblem:
             print(f"Error: {e}")
 
 
-def preprocess_code(source):
-    code_lines = source.strip().split('\n')
-    processed_lines = []
-    for line in code_lines:
+class TrackedArray:
+    def __init__(self, name, data):
+        self.name = name
+        self.data = data
+        self.reads_per_thread = 0
+        self.writes_per_thread = 0
+        self.max_reads = 0
+        self.max_writes = 0
+    
+    def __getitem__(self, index):
+        if (index > len(self.data)): 
+            raise Exception(f"Out-of-bounds access in mx.array '{self.name}' at index {index}.")
+        self.reads_per_thread += 1
+        return self.data[index]
+    
+    def __setitem__(self, index, value):
+        if (index > len(self.data)): 
+            raise Exception(f"Out-of-bounds access in mx.array '{self.name}' at index {index}.")
+        self.writes_per_thread += 1
+        self.data[index] = value
+    
+    def get_reads(self):
+        return self.max_reads
+    
+    def get_writes(self):
+        return self.max_writes
+    
+    def set_max(self):
+        self.max_reads = max(self.reads_per_thread, self.max_reads)
+        self.max_writes = max(self.writes_per_thread, self.max_writes)
+        self.reads_per_thread = 0
+        self.writes_per_thread = 0
+
+def convert_source_to_py(source):
+
+    metal_source = preprocess_source(source)
+
+    output_lines = []
+    for_loop_incr = []
+    indent_level = 0
+    statement = False
+    lines = metal_source.splitlines()
+    for line in lines:
         line = line.strip()
-        if re.match(r'^//', line): continue # Skip comments
-        line = re.sub(r'\b(uint|int|float|double)\b', '', line) # Remove type declarations
-        line = line.replace('thread_position_in_grid.x', 'thread_position_in_grid_x')
-        line = line.replace('thread_position_in_grid.y', 'thread_position_in_grid_y')
-        line = line.replace('thread_position_in_grid.z', 'thread_position_in_grid_z')
-        processed_lines.append(line)
-    return '\n'.join(processed_lines)
 
-def evaluate_expression(expr, variables):
-    # Replace array access opertator[]
-    pattern = r'(\w+)\[(.+?)\]'
-    def replace_array_access(match):
-        array_name = match.group(1)
-        index_expr = match.group(2)
-        index_value = evaluate_expression(index_expr, variables)
-        array = variables.get(array_name)
-        if array is None:
-            raise Exception(f"Array '{array_name}' not found.")
-        if not isinstance(index_value, int):
-            raise Exception(f"Index '{index_expr}' evaluated to non-integer value.")
-        if index_value < 0 or index_value >= len(array):
-            raise Exception(f"Out-of-bounds access in mx.array '{array_name}' at index {index_value}.")
-        return str(array[index_value])
-    expr = re.sub(pattern, replace_array_access, expr)
-    
-    # Replace variables with their values
-    for var in sorted(variables, key=lambda v: -len(v)):  # Longer names first
-        expr = re.sub(r'\b' + re.escape(var) + r'\b', str(variables[var]), expr)
-    
-    # Evaluate the expression safely
-    try:
-        return eval(expr, {"__builtins__": None}, {})
-    except Exception as e:
-        raise Exception(f"Error evaluating expression '{expr}': {e}")
+        for keyword, pattern, replacement in [
+            ('if', r'if\s*\((.*?)\)\s*\{?', r'if \1:'),
+            ('while', r'while\s*\((.*?)\)\s*\{?', r'while \1:'),
+            ('else', r'else\s*\{?', r'else:')
+        ]:
+            if keyword in line:
+                line = re.sub(pattern, replacement, line)
+                indent_level += 1
+                statement = True
 
-def process_assignment(line, variables):
-    line = line.rstrip(';')
-    if '=' not in line:
-        return variables
-    lhs, rhs = line.split('=', 1)
-    lhs = lhs.strip()
-    rhs = rhs.strip()
-    value = evaluate_expression(rhs, variables)
+        m = re.match(r'for\s*\(\s*(.*?);\s*(.*?);\s*(.*?)\s*\)\s*\{?', line)
+        if m:
+            init = m.group(1).strip()
+            cond = m.group(2).strip()
+            incr = m.group(3).strip()
 
-    pattern = r'(\w+)\[(.+?)\]'
-    match = re.match(pattern, lhs)
-    if match:
-        array_name = match.group(1)
-        index_expr = match.group(2)
-        index_value = evaluate_expression(index_expr, variables)
-        array = variables.get(array_name)
-        if array is None:
-            raise Exception(f"Array '{array_name}' not found.")
-        if not isinstance(index_value, int):
-            raise Exception(f"Index '{index_expr}' evaluated to non-integer value.")
-        if index_value < 0 or index_value >= len(array):
-            raise Exception(f"Out-of-bounds write in mx.array '{array_name}' at index {index_value}.")
-        array[index_value] = value
-    else:
-        variables[lhs] = value
-    return variables
+            output_lines.append(init)
+            output_lines.append("while " + cond + ":")
 
-def evaluate_condition(condition, variables):
-    condition = condition.replace('&&', 'and')
-    condition = condition.replace('||', 'or')
+            if '++' in incr:
+                incr = re.sub(r'\+\+', '+=1', incr)
+            elif '--' in incr:
+                incr = re.sub(r'\+\+', '-=1', incr)
+            for_loop_incr.append(incr)
+            indent_level += 1
+            continue
 
-    # Replace variables with their values
-    for var in sorted(variables, key=lambda v: -len(v)):
-        condition = re.sub(r'\b' + re.escape(var) + r'\b', str(variables[var]), condition)
-    # Evaluate the condition
-    try:
-        return eval(condition, {"__builtins__": None}, {})
-    except Exception as e:
-        raise Exception(f"Error evaluating condition '{condition}': {e}")
+        if line == '{':
+            indent_level += 1
+            continue
+        elif line == '}':
+            for incr in for_loop_incr:
+                line = '\t' * indent_level + incr
+                output_lines.append(line)
+            indent_level -= 1
+            continue
 
-def parse_code_blocks(code_lines):
-    statements = []
-    index = 0
-    while index < len(code_lines):
-        line = code_lines[index].strip()
-        if line.startswith('if'):
-            # Extract the condition
-            m = re.match(r'if\s*\((.*)\)\s*{', line)
-            if m:
-                condition = m.group(1)
-                index += 1
-                # Extract the code block
-                block_lines = []
-                brace_count = 1
-                while index < len(code_lines) and brace_count > 0:
-                    line = code_lines[index]
-                    if '{' in line:
-                        brace_count += line.count('{')
-                    if '}' in line:
-                        brace_count -= line.count('}')
-                    if brace_count > 0:
-                        block_lines.append(line)
-                    index += 1
-                if brace_count != 0:
-                    raise Exception("Mismatched braces in if statement")
-                # Recursively parse the block
-                block_statements = parse_code_blocks(block_lines)
-                statements.append(('if', condition, block_statements))
-            else:
-                # Try to match a single-line if statement
-                m = re.match(r'if\s*\((.*)\)\s*(.+);', line)
-                if m:
-                    condition = m.group(1)
-                    single_line = m.group(2)
-                    # Parse the single-line statement
-                    statements.append(('if', condition, [('assign', single_line)]))
-                    index += 1
-                else:
-                    # Handle cases where the statement is on the next line
-                    m = re.match(r'if\s*\((.*)\)', line)
-                    if m:
-                        condition = m.group(1)
-                        index += 1
-                        if index < len(code_lines):
-                            next_line = code_lines[index].strip()
-                            statements.append(('if', condition, [('assign', next_line.rstrip(';'))]))
-                            index += 1
-                        else:
-                            raise Exception(f"Expected statement after 'if' at line {index}")
-                    else:
-                        raise Exception(f"Invalid if statement syntax at line {index}: {line}")
-        else:
-            statements.append(('assign', line))
-            index += 1
-    return statements
+        if not statement:
+            line = line.replace(';', '')
+            line = '\t' * indent_level + line
+        output_lines.append(line)
+        statement = False
 
-def execute_statements(statements, variables):
-    for stmt in statements:
-        if stmt[0] == 'assign':
-            process_assignment(stmt[1], variables)
-        elif stmt[0] == 'if':
-            condition = stmt[1]
-            block_statements = stmt[2]
-            if evaluate_condition(condition, variables):
-                execute_statements(block_statements, variables)
+    return '\n'.join(output_lines)
 
-def verify_source(source, inputs, outputs, grid):
-    grid_x, grid_y, grid_z = grid
-    source = preprocess_code(source)
-    code_lines = [line.strip() for line in source.strip().split('\n') if line.strip()]
-    statements = parse_code_blocks(code_lines)
-    variables = {}
-    variables.update(inputs)
-    variables.update(outputs)
-    errors = []
+def preprocess_source(source):
+    metal_source = re.sub(r'//.*', '', source)
+    metal_source = re.sub(r'\b(uint|int|float|double)\b', '', metal_source)
+    metal_source = metal_source.replace('&&', 'and')
+    metal_source = metal_source.replace('||', 'or')
 
-    # Simulate each thread in the grid
-    for x in range(grid_x):
-        for y in range(grid_y):
-            for z in range(grid_z):
-                thread_variables = variables.copy()
-                thread_variables['thread_position_in_grid_x'] = x
-                thread_variables['thread_position_in_grid_y'] = y
-                thread_variables['thread_position_in_grid_z'] = z
-                try:
-                    execute_statements(statements, thread_variables)
-                except Exception as e:
-                    errors.append(e)
-
-    if errors: 
-        for e in errors: print(e)
-        raise Exception(f"{len(errors)} errors found in Metal source code.")
+    for axis in ["x", "y", "z"]:
+        replacements = [
+            (r'thread_position_in_grid\.', 'thread_position_in_grid_'),
+            (r'threadgroup_position_in_grid\.', 'threadgroup_position_in_grid_'),
+            (r'threads_per_threadgroup\.', 'threads_per_threadgroup_'),
+            (r'thread_position_in_threadgroup\.', 'thread_position_in_threadgroup_')
+        ]
+        for old, new in replacements:
+            metal_source = re.sub(old+axis, new+axis, metal_source)
+    return metal_source 
