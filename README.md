@@ -618,7 +618,7 @@ def conv_spec(a: mx.array, b: mx.array):
 
 def conv_test(a: mx.array, b: mx.array):
     header = """
-        constant uint THREADGROUP_MEM_SIZE = 8;
+        constant uint THREADGROUP_MAX_CONV_SIZE = 12;
         constant uint MAX_CONV = 4;
     """
 
