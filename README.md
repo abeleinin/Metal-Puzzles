@@ -478,6 +478,15 @@ problem = MetalProblem(
     threadgroup=(4,1,1),
     spec=map_spec
 )
+problem.show()
+```
+
+```
+# Threadgroup Memory
+
+    Score (Max Per Thread):
+    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+    |             1 |             0 |             0 |             1 | 
 ```
 
 ```python
@@ -540,6 +549,15 @@ problem = MetalProblem(
     threadgroup=(SIZE,1,1),
     spec=pooling_spec
 )
+problem.show()
+```
+
+```
+# Pooling
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```
@@ -598,6 +616,15 @@ problem = MetalProblem(
     threadgroup=(SIZE,1,1),
     spec=dot_spec
 )
+problem.show()
+```
+
+```
+# Dot Product
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -654,6 +681,15 @@ problem = MetalProblem(
     threadgroup=(8,1,1),
     spec=conv_spec
 )
+problem.show()
+```
+
+```
+# 1D Conv (Simple)
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -681,6 +717,15 @@ problem = MetalProblem(
     threadgroup=(8,1,1),
     spec=conv_spec
 )
+problem.show()
+```
+
+```
+# 1D Conv (Full)
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -743,6 +788,15 @@ problem = MetalProblem(
     threadgroup=(8,1,1),
     spec=prefix_sum_spec
 )
+problem.show()
+```
+
+```
+# Prefix Sum (Simple)
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -770,6 +824,15 @@ problem = MetalProblem(
     threadgroup=(8,1,1),
     spec=prefix_sum_spec
 )
+problem.show()
+```
+
+```
+# Prefix Sum (Full)
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -831,6 +894,15 @@ problem = MetalProblem(
     threadgroup=(8,1,1),
     spec=axis_sum_spec
 )
+problem.show()
+```
+
+```
+# Axis Sum
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -901,6 +973,15 @@ problem = MetalProblem(
     threadgroup=(3,3,1),
     spec=matmul_spec
 )
+problem.show()
+```
+
+```
+# Matmul (Simple)
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python
@@ -931,6 +1012,15 @@ problem = MetalProblem(
     threadgroup=(3,3,1),
     spec=matmul_spec
 )
+problem.show()
+```
+
+```
+# Matmul (Full)
+ 
+   Score (Max Per Thread):
+   |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
+   |             0 |             0 |             0 |             0 | 
 ```
 
 ```python

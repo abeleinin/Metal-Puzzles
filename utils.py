@@ -71,26 +71,31 @@ class MetalProblem:
         threads_per_threadgroup_y = self.threadgroup[1]
         threads_per_threadgroup_z = self.threadgroup[2]
 
-        metal_py = convert_source_to_py(self.metalKernel.source)
+        full = {'in_reads' : 0, 'out_writes' : 0, 'shared_reads' : 0, 'shared_writes' : 0}
+        metal_py = convert_source_to_py(self.metalKernel.header + self.metalKernel.source)
         for grid_x in range(self.grid[0]):
-            thread_position_in_grid_x = grid_x
             for grid_y in range(self.grid[1]):
-                thread_position_in_grid_y = grid_y
+                thread_position_in_grid_x, thread_position_in_grid_y = grid_x, grid_y
+
                 threadgroup_position_in_grid_x = grid_x // self.threadgroup[0]
                 thread_position_in_threadgroup_x = grid_x % self.threadgroup[0]
                 threadgroup_position_in_grid_y = grid_y // self.threadgroup[1]
                 thread_position_in_threadgroup_y = grid_y % self.threadgroup[1]
-                exec(metal_py)
-                for name in self.metalKernel.input_names:
-                    locals()[name].set_max()
-                for name in self.metalKernel.output_names:
-                    locals()[name].set_max()
 
-        full = {'in_reads' : 0, 'out_writes' : 0, 'shared_reads' : 0, 'shared_writes' : 0}
+                exec(metal_py)
+
+                local_variables = locals().copy()
+                for name, value in local_variables.items():
+                    if isinstance(value, ThreadgroupMemory):
+                        full['shared_reads'] = max(locals()[name].get_reads(), full['shared_reads'])
+                        full['shared_writes'] = max(locals()[name].get_writes(), full['shared_writes'])
+                    if isinstance(value, TrackedArray):
+                        locals()[name].set_max()
+
         for name in self.metalKernel.input_names:
-            full['in_reads'] = max(locals()[name].get_reads(), full['in_reads'])
-        for name in self.metalKernel.output_names:
-            full['out_writes'] = locals()[name].get_writes()
+            full['in_reads'] += locals()[name].get_reads()
+        
+        full['out_writes'] = locals()[self.metalKernel.output_names[0]].get_writes()
         return (f"""# {self.name}
 
     Score (Max Per Thread):
@@ -100,17 +105,11 @@ class MetalProblem:
     
     def show(self):
         self.metalKernel = self.fn(*self.inputs)
-        if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast", "Threadgroups", "Threadgroups 2D"]:
-            print(self.score())
-        else:
-            print(f"MetalProblem.show() is unavaiable for the '{self.name}' kernel.")
+        print(self.score())
 
     def check(self):
         try:
             self.metalKernel = self.fn(*self.inputs)
-
-            if self.name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast", "Threadgroups", "Threadgroups 2D"]:
-                score = self.score()
 
             if os.getenv("MTL_CAPTURE_ENABLED") == '1':
                 mx.eval(*self.inputs)
@@ -133,7 +132,6 @@ class MetalProblem:
 
         except AssertionError as e:
             print(f"Error: {e}")
-
 
 class TrackedArray:
     def __init__(self, name, data):
@@ -168,6 +166,31 @@ class TrackedArray:
         self.reads_per_thread = 0
         self.writes_per_thread = 0
 
+class ThreadgroupMemory:
+    def __init__(self, size, size2=0):
+        shape = (size, size2) if size2 != 0 else size
+        self.data = mx.zeros(shape)
+        self.reads_per_thread = 0
+        self.writes_per_thread = 0
+    
+    def __getitem__(self, index):
+        if (index > len(self.data)): 
+            raise Exception(f"Out-of-bounds access in ThreadgroupMemory at index {index}.")
+        self.reads_per_thread += 1
+        return self.data[index]
+
+    def __setitem__(self, index, value):
+        if (index > len(self.data)): 
+            raise Exception(f"Out-of-bounds access in ThreadgroupMemory at index {index}.")
+        self.writes_per_thread += 1
+        self.data[index] = value
+    
+    def get_reads(self):
+        return self.reads_per_thread
+    
+    def get_writes(self):
+        return self.writes_per_thread
+
 def convert_source_to_py(source):
 
     metal_source = preprocess_source(source)
@@ -181,12 +204,14 @@ def convert_source_to_py(source):
         line = line.strip()
 
         for keyword, pattern, replacement in [
+            ('else if', r'\s*\}?\s*else if\s*\((.*?)\)\s*\{?', r'elif \1:'),
             ('if', r'if\s*\((.*?)\)\s*\{?', r'if \1:'),
             ('while', r'while\s*\((.*?)\)\s*\{?', r'while \1:'),
-            ('else', r'else\s*\{?', r'else:')
+            ('else', r'\s*\}?\s*else\s*\{?', r'else:')
         ]:
             if keyword in line:
                 line = re.sub(pattern, replacement, line)
+                line = '    ' * indent_level + line
                 indent_level += 1
                 statement = True
 
@@ -196,15 +221,17 @@ def convert_source_to_py(source):
             cond = m.group(2).strip()
             incr = m.group(3).strip()
 
-            output_lines.append(init)
-            output_lines.append("while " + cond + ":")
+            output_lines.append('    ' * indent_level + init)
+            output_lines.append('    ' * indent_level + "while " + cond + ":")
 
             if '++' in incr:
-                incr = re.sub(r'\+\+', '+=1', incr)
+                incr = re.sub(r'(\+\+)(\w+)', r'\2 += 1', incr)
+                incr = re.sub(r'(\w+)(\+\+)', r'\1 += 1', incr)
             elif '--' in incr:
-                incr = re.sub(r'\+\+', '-=1', incr)
-            for_loop_incr.append(incr)
+                incr = re.sub(r'(\-\-)(\w+)', r'\2 -= 1', incr)
+                incr = re.sub(r'(\w+)(\-\-)', r'\1 -= 1', incr)
             indent_level += 1
+            for_loop_incr.append('    ' * indent_level + incr)
             continue
 
         if line == '{':
@@ -212,14 +239,14 @@ def convert_source_to_py(source):
             continue
         elif line == '}':
             for incr in for_loop_incr:
-                line = '\t' * indent_level + incr
-                output_lines.append(line)
+                output_lines.append(incr)
+                for_loop_incr.pop()
             indent_level -= 1
             continue
 
         if not statement:
             line = line.replace(';', '')
-            line = '\t' * indent_level + line
+            line = '    ' * indent_level + line
         output_lines.append(line)
         statement = False
 
@@ -227,7 +254,11 @@ def convert_source_to_py(source):
 
 def preprocess_source(source):
     metal_source = re.sub(r'//.*', '', source)
-    metal_source = re.sub(r'\b(uint|int|float|double)\b', '', metal_source)
+    metal_source = re.sub(r'threadgroup float (\w+)\[(\w+)\]\[(\w+)\];', r'\1 = ThreadgroupMemory(\2, \3)', metal_source)
+    metal_source = re.sub(r'threadgroup float (\w+)\[(\w+)\];', r'\1 = ThreadgroupMemory(\2)', metal_source)
+    metal_source = re.sub(r'threadgroup_barrier\(mem_flags::mem_threadgroup\);', '', metal_source)
+    metal_source = re.sub(r'metal::', '', metal_source)
+    metal_source = re.sub(r'\b(uint|int|float|double|auto|constant)\b', '', metal_source)
     metal_source = metal_source.replace('&&', 'and')
     metal_source = metal_source.replace('||', 'or')
 
@@ -240,4 +271,5 @@ def preprocess_source(source):
         ]
         for old, new in replacements:
             metal_source = re.sub(old+axis, new+axis, metal_source)
+    
     return metal_source 

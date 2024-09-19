@@ -48,6 +48,8 @@ problem = MetalProblem(
     spec=map_spec
 )
 
+problem.show()
+
 problem.check()
 
 ############################################################
@@ -88,6 +90,8 @@ problem = MetalProblem(
     grid=(SIZE,1,1),
     spec=zip_spec
 )
+
+problem.show()
 
 problem.check()
 
@@ -132,6 +136,8 @@ problem = MetalProblem(
     spec=map_spec
 )
 
+problem.show()
+
 problem.check()
 
 ############################################################
@@ -173,6 +179,8 @@ problem = MetalProblem(
     spec=map_spec
 )
 
+problem.show()
+
 problem.check()
 
 ############################################################
@@ -210,6 +218,8 @@ problem = MetalProblem(
     grid=(3,3,1), 
     spec=zip_spec
 )
+
+problem.show()
 
 problem.check()
 
@@ -255,6 +265,8 @@ problem = MetalProblem(
     spec=map_spec
 )
 
+problem.show()
+
 problem.check()
 
 ############################################################
@@ -292,6 +304,8 @@ problem = MetalProblem(
     threadgroup=(3,3,1),
     spec=map_spec
 )
+
+problem.show()
 
 problem.check()
 
@@ -360,6 +374,8 @@ problem = MetalProblem(
     spec=map_spec
 )
 
+problem.show()
+
 problem.check()
 
 ############################################################
@@ -419,6 +435,8 @@ problem = MetalProblem(
     spec=pooling_spec
 )
 
+problem.show()
+
 problem.check()
 
 ############################################################
@@ -471,6 +489,8 @@ problem = MetalProblem(
     threadgroup=(SIZE,1,1),
     spec=dot_spec
 )
+
+problem.show()
 
 problem.check()
 
@@ -527,6 +547,8 @@ problem = MetalProblem(
     spec=conv_spec
 )
 
+problem.show()
+
 problem.check()
 
 # Test 2
@@ -543,6 +565,8 @@ problem = MetalProblem(
     threadgroup=(8,1,1),
     spec=conv_spec
 )
+
+problem.show()
 
 problem.check()
 
@@ -601,6 +625,8 @@ problem = MetalProblem(
     spec=prefix_sum_spec
 )
 
+problem.show()
+
 problem.check()
 
 # Test 2
@@ -617,6 +643,8 @@ problem = MetalProblem(
     threadgroup=(8,1,1),
     spec=prefix_sum_spec
 )
+
+problem.show()
 
 problem.check()
 
@@ -670,6 +698,8 @@ problem = MetalProblem(
     threadgroup=(8,1,1),
     spec=axis_sum_spec
 )
+
+problem.show()
 
 problem.check()
 
@@ -733,6 +763,8 @@ problem = MetalProblem(
     spec=matmul_spec
 )
 
+problem.show()
+
 problem.check()
 
 # Test 2
@@ -750,5 +782,7 @@ problem = MetalProblem(
     threadgroup=(3,3,1),
     spec=matmul_spec
 )
+
+problem.show()
 
 problem.check()
