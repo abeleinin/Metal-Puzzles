@@ -11,7 +11,8 @@ Whether you're new to GPU programming or have experience with CUDA, the followin
 If you're interested in more material, check out the [MLX Custom Metal Kernels Documentation](https://ml-explore.github.io/mlx/build/html/dev/custom_metal_kernels.html) and the [Metal Shading Language specification](https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf).
 
 ```sh
-python -m pip install mlx
+pip install -qqq git+https://github.com/danoneata/chalk@srush-patch-1
+pip install mlx
 ```
 
 ```python
@@ -68,6 +69,8 @@ problem.show()
    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
    |             0 |             0 |             0 |             0 | 
 ```
+
+![svg](imgs/metal_puzzles_map.svg)
 
 ```python
 problem.check()
@@ -126,6 +129,8 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
+![svg](imgs/metal_puzzles_zip.svg)
+
 ```python
 problem.check()
 ```
@@ -183,6 +188,8 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
+![svg](imgs/metal_puzzles_guard.svg)
+
 ```python
 problem.check()
 ```
@@ -238,6 +245,8 @@ problem.show()
    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
    |             0 |             0 |             0 |             0 | 
 ```
+
+![svg](imgs/metal_puzzles_map_2D.svg)
 
 ```python
 problem.check()
@@ -295,6 +304,8 @@ problem.show()
    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
    |             0 |             0 |             0 |             0 | 
 ```
+
+![svg](imgs/metal_puzzles_broadcast.svg)
 
 ```python
 problem.check()
@@ -354,6 +365,8 @@ problem.show()
     |             0 |             0 |             0 |             0 | 
 ```
 
+![svg](imgs/metal_puzzles_threadgroups.svg)
+
 ```python
 problem.check()
 ```
@@ -407,6 +420,8 @@ problem.show()
     |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
     |             0 |             0 |             0 |             0 | 
 ```
+
+![svg](imgs/metal_puzzles_threadgroups_2D.svg)
 
 ```python
 problem.check()
@@ -489,6 +504,8 @@ problem.show()
     |             1 |             0 |             0 |             1 | 
 ```
 
+![svg](imgs/metal_puzzles_threadgroup_memory.svg)
+
 ```python
 problem.check()
 ```
@@ -560,6 +577,8 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
+![svg](imgs/metal_puzzles_pooling.svg)
+
 ```
 problem.check()
 ```
@@ -626,6 +645,8 @@ problem.show()
    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
    |             0 |             0 |             0 |             0 | 
 ```
+
+![svg](imgs/metal_puzzles_dot_product.svg)
 
 ```python
 problem.check()
@@ -719,6 +740,8 @@ problem = MetalProblem(
 )
 problem.show()
 ```
+
+![svg](imgs/metal_puzzles_1D_conv.svg)
 
 ```
 # 1D Conv (Full)
@@ -835,6 +858,8 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
+![svg](imgs/metal_puzzles_prefix_sum.svg)
+
 ```python
 problem.check()
 ```
@@ -904,6 +929,8 @@ problem.show()
    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
    |             0 |             0 |             0 |             0 | 
 ```
+
+![svg](imgs/metal_puzzles_axis_sum.svg)
 
 ```python
 problem.check()
@@ -1022,6 +1049,8 @@ problem.show()
    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
    |             0 |             0 |             0 |             0 | 
 ```
+
+![svg](imgs/metal_puzzles_matmul.svg)
 
 ```python
 problem.check()
