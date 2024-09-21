@@ -109,10 +109,10 @@ class MetalProblem:
                 tables = []
                 args = ["a", "b", "c", "d"]
                 for i, inp in enumerate(self.inputs):
-                    globals()[args[i]] = Table(args[i], inp.reshape(inp.size))
+                    globals()[args[i]] = Table(args[i], inp)
                     tables.append(globals()[args[i]])
                 out = mx.zeros(self.output_shapes)
-                out = Table("out", out.reshape(out.size))
+                out = Table("out", out)
                 metal = Metal(block, self.threadsperblock, pos, pos)
 
                 exec(metal_py)
@@ -298,9 +298,9 @@ class Table:
         self.size = array.shape
     
     def __getitem__(self, index):
-        self.array[index]
         if isinstance(index, int):
-            index = (index,)
+            index = (index // self.size[0], index % self.size[1]) if len(self.size) == 2 else (index,)
+            if index[0] >= self.size[0]: index = (self.size[0]-1, index[1])
         assert len(index) == len(self.size), "Wrong number of indices"
         if index[0] >= self.size[0]:
             assert False, "bad size"
@@ -308,9 +308,9 @@ class Table:
         return Scalar((self.name,) + index)
 
     def __setitem__(self, index, val):
-        self.array[index]
         if isinstance(index, int):
-            index = (index,)
+            index = (index // self.size[0], index % self.size[1]) if len(self.size) == 2 else (index,)
+            if index[0] >= self.size[0]: index = (self.size[0]-1, index[1])
         assert len(index) == len(self.size), "Wrong number of indices"
         if index[0] >= self.size[0]:
             assert False, "bad size"
