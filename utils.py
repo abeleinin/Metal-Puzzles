@@ -123,12 +123,9 @@ class MetalProblem:
         return results
     
     def show(self):
-        if self.name not in ["Pooling", "1D Conv (Simple)", "1D Conv (Full)", "Axis Sum", "Matmul (Simple)", "Matmul (Full)"]:
-            results = self.run_python()
-            score = self.score(results)
-            return draw_results(results, self.name, self.threadsperblock.x, self.threadsperblock.y)
-        else:
-            print(f"MetalProblem.show() unavailable for {self.name} kernel.")
+        results = self.run_python()
+        score = self.score(results)
+        return draw_results(results, self.name, self.threadsperblock.x, self.threadsperblock.y)
 
     def check(self):
         try:
@@ -160,24 +157,40 @@ def convert_source_to_py(source):
     metal_source = preprocess_source(source)
 
     output_lines = []
-    for_loop_incr = []
+    incr_stack = []
     indent_level = 0
     statement = False
     lines = metal_source.splitlines()
     for line in lines:
         line = line.strip()
 
+        if line.count("}") > 0 and line.count("{") > 0:
+            pass
+        elif line.count("{") > 0:
+            indent_level += 1
+            if line == "{": continue
+        elif line.count("}") > 0:
+            indent_level -= 1
+            if line == "}": 
+                if incr_stack:
+                    incr_indent_level, incr_line = incr_stack[-1]
+                    if incr_indent_level == indent_level + 1:
+                        output_lines.append(incr_line)
+                        incr_stack.pop()
+                continue
+
+        line_no_braces = line.replace('{', '').replace('}', '')
+
         for keyword, pattern, replacement in [
-            ('else if', r'\s*\}?\s*else if\s*\((.*?)\)\s*\{?', r'elif \1:'),
-            ('if', r'if\s*\((.*?)\)\s*\{?', r'if \1:'),
-            ('while', r'while\s*\((.*?)\)\s*\{?', r'while \1:'),
-            ('else', r'\s*\}?\s*else\s*\{?', r'else:')
+            ('else if', r'\s*else\s+if\s*\((.*)\)', r'elif \1:'),
+            ('if', r'\s*if\s*\((.*)\)', r'if \1:'),
+            ('while', r'\s*while\s*\((.*)\)', r'while \1:'),
+            ('else', r'\s*else', r'else:')
         ]:
-            if keyword in line:
-                line = re.sub(pattern, replacement, line)
-                line = '    ' * indent_level + line
-                indent_level += 1
+            if re.match(pattern, line_no_braces):
+                line = re.sub(pattern, replacement, line_no_braces)
                 statement = True
+                break
 
         m = re.match(r'for\s*\(\s*(.*?);\s*(.*?);\s*(.*?)\s*\)\s*\{?', line)
         if m:
@@ -185,8 +198,10 @@ def convert_source_to_py(source):
             cond = m.group(2).strip()
             incr = m.group(3).strip()
 
-            output_lines.append('    ' * indent_level + init)
-            output_lines.append('    ' * indent_level + "while " + cond + ":")
+            init = re.sub(r'()\s*=\s*(.*)', r'\1 = int(\2)', init)
+
+            output_lines.append('    ' * (indent_level-1) + init)
+            output_lines.append('    ' * (indent_level-1) + "while " + cond + ":")
 
             if '++' in incr:
                 incr = re.sub(r'(\+\+)(\w+)', r'\2 += 1', incr)
@@ -194,23 +209,18 @@ def convert_source_to_py(source):
             elif '--' in incr:
                 incr = re.sub(r'(\-\-)(\w+)', r'\2 -= 1', incr)
                 incr = re.sub(r'(\w+)(\-\-)', r'\1 -= 1', incr)
-            indent_level += 1
-            for_loop_incr.append('    ' * indent_level + incr)
-            continue
+            elif '/=' in incr:
+                incr = re.sub(r'\s*(.*?)\s*/=\s*(.*)', r'\1 = int(\1 / \2)', incr)
 
-        if line == '{':
-            indent_level += 1
-            continue
-        elif line == '}':
-            for incr in for_loop_incr:
-                output_lines.append(incr)
-                for_loop_incr.pop()
-            indent_level -= 1
+            incr_line = '    ' * indent_level + incr
+            incr_stack.append((indent_level, incr_line))
             continue
 
         if not statement:
             line = line.replace(';', '')
             line = '    ' * indent_level + line
+        else:
+            line = '    ' * (indent_level-1) + line
         output_lines.append(line)
         statement = False
 
@@ -223,6 +233,7 @@ def preprocess_source(source):
     source = re.sub(r'threadgroup_barrier\(mem_flags::mem_threadgroup\);', 'metal.syncthreads()', source)
     source = re.sub(r'metal::', '', source)
     source = re.sub(r'\b(uint|int|float|double|auto|constant)\b', '', source)
+    source = re.sub(r'\s*(\]\[)', ', ', source)
     source = source.replace('&&', 'and')
     source = source.replace('||', 'or')
 
