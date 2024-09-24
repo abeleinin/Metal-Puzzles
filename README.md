@@ -70,7 +70,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_map.png)
+<img src="imgs/metal_puzzles_map.png" height="500">
 
 ```python
 problem.check()
@@ -129,7 +129,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_zip.png)
+<img src="imgs/metal_puzzles_zip.png" height="500">
 
 ```python
 problem.check()
@@ -188,7 +188,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_guard.png)
+<img src="imgs/metal_puzzles_guard.png" height="500">
 
 ```python
 problem.check()
@@ -246,7 +246,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_map_2D.png)
+<img src="imgs/metal_puzzles_map_2D.png" height="500">
 
 ```python
 problem.check()
@@ -305,7 +305,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_broadcast.png)
+<img src="imgs/metal_puzzles_broadcast.png" height="500">
 
 ```python
 problem.check()
@@ -365,7 +365,7 @@ problem.show()
     |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_threadgroups.png)
+<img src="imgs/metal_puzzles_threadgroups.png" height="500">
 
 ```python
 problem.check()
@@ -421,7 +421,7 @@ problem.show()
     |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_threadgroups_2D.png)
+<img src="imgs/metal_puzzles_threadgroups_2D.png" height="500">
 
 ```python
 problem.check()
@@ -504,7 +504,7 @@ problem.show()
     |             1 |             0 |             0 |             1 | 
 ```
 
-![png](imgs/metal_puzzles_threadgroup_memory.png)
+<img src="imgs/metal_puzzles_threadgroup_memory.png" height="500">
 
 ```python
 problem.check()
@@ -577,7 +577,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_pooling.png)
+<img src="imgs/metal_puzzles_pooling.png" height="500">
 
 ```
 problem.check()
@@ -646,7 +646,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_dot_product.png)
+<img src="imgs/metal_puzzles_dot_product.png" height="500">
 
 ```python
 problem.check()
@@ -713,7 +713,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_1D_conv_simple.png)
+<img src="imgs/metal_puzzles_1D_conv_simple.png" height="500">
 
 ```python
 problem.check()
@@ -751,7 +751,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_1D_conv_full.png)
+<img src="imgs/metal_puzzles_1D_conv_full.png" height="500">
 
 ```python
 problem.check()
@@ -824,7 +824,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_prefix_sum_simple.png)
+<img src="imgs/metal_puzzles_prefix_sum_simple.png" height="500">
 
 ```python
 problem.check()
@@ -862,7 +862,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_prefix_sum_full.png)
+<img src="imgs/metal_puzzles_prefix_sum_full.png" height="500">
 
 ```python
 problem.check()
@@ -934,7 +934,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_axis_sum.png)
+<img src="imgs/metal_puzzles_axis_sum.png" height="500">
 
 ```python
 problem.check()
@@ -1015,7 +1015,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_matmul_simple.png)
+<img src="imgs/metal_puzzles_matmul_simple.png" height="500">
 
 ```python
 problem.check()
@@ -1056,7 +1056,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![png](imgs/metal_puzzles_matmul_full.png)
+<img src="imgs/metal_puzzles_matmul_full.png" height="500">
 
 ```python
 problem.check()
@@ -1094,18 +1094,18 @@ Once opened you'll be able to profile the GPU trace to view its performance. Her
 
 First select `Group By Pipeline State` on the left sidebar, which will simplify locating the custom kernels `Compute Pipeline`.
 
-![](/imgs/metal-debugger-1.png)
+![](/imgs/metal_debugger_1.png)
 
 Next, local which `Compute Pipeline` contains to your custom kernel (all generated kernels will be prefixed with `custom_kernel_{name}`).
 
-![](/imgs/metal-debugger-2.png)
+![](/imgs/metal_debugger_2.png)
 
 If you click on the kernel name on the left sidebar you'll be shown your kernel code. From this page, you can select the bug icon to begin a step debugger for each GPU thread or view statistics for different parts of your kernel.
 
-![](/imgs/metal-debugger-3.png)
+![](/imgs/metal_debugger_3.png)
 
 If you can hover over one of the orange circles, you can view its `Runtime Statistics`.
 
-![](/imgs/metal-debugger-4.png)
+![](/imgs/metal_debugger_4.png)
 
 More information about the debugger can be found on the [MLX Metal Debugger](https://ml-explore.github.io/mlx/build/html/dev/metal_debugger.html) documentation or in the [Metal Debugger Apple Developer](https://developer.apple.com/documentation/xcode/metal-debugger) documentation.
