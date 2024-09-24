@@ -421,7 +421,7 @@ problem.show()
     |             0 |             0 |             0 |             0 | 
 ```
 
-<img src="imgs/metal_puzzles_threadgroups_2D.png" height="500">
+<img src="imgs/metal_puzzles_threadgroup_2D.png" height="500">
 
 ```python
 problem.check()
