@@ -299,8 +299,7 @@ class Table:
     
     def __getitem__(self, index):
         if isinstance(index, int):
-            index = (index // self.size[0], index % self.size[1]) if len(self.size) == 2 else (index,)
-            if index[0] >= self.size[0]: index = (self.size[0]-1, index[1])
+            index = (index // self.size[1], index % self.size[1]) if len(self.size) == 2 else (index,)
         assert len(index) == len(self.size), "Wrong number of indices"
         if index[0] >= self.size[0]:
             assert False, "bad size"
@@ -309,8 +308,7 @@ class Table:
 
     def __setitem__(self, index, val):
         if isinstance(index, int):
-            index = (index // self.size[0], index % self.size[1]) if len(self.size) == 2 else (index,)
-            if index[0] >= self.size[0]: index = (self.size[0]-1, index[1])
+            index = (index // self.size[1], index % self.size[1]) if len(self.size) == 2 else (index,)
         assert len(index) == len(self.size), "Wrong number of indices"
         if index[0] >= self.size[0]:
             assert False, "bad size"
