@@ -529,7 +529,10 @@ def draw_results(results, name, tpbx, tpby, sparse=False):
         height = dia.get_envelope().height
 
         # Label threadgroup and surround
-        dia = hstrut(1) | (label(dia, f"Threadgroup {threadgroup.x} {threadgroup.y}")) | hstrut(1)
+        if name in ["Map", "Zip", "Guard", "Map 2D", "Broadcast"]:
+            dia = hstrut(1) | (label(dia, "Grid")) | hstrut(1)
+        else:
+            dia = hstrut(1) | (label(dia, f"Threadgroup {threadgroup.x} {threadgroup.y}")) | hstrut(1)
         dia = dia.center_xy().pad(1.2)
         env = dia.get_envelope()
         dia = dia + rectangle(env.width, env.height, 0.5).line_color(

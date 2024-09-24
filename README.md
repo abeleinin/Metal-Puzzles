@@ -70,7 +70,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_map.svg)
+![png](imgs/metal_puzzles_map.png)
 
 ```python
 problem.check()
@@ -129,7 +129,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_zip.svg)
+![png](imgs/metal_puzzles_zip.png)
 
 ```python
 problem.check()
@@ -188,7 +188,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_guard.svg)
+![png](imgs/metal_puzzles_guard.png)
 
 ```python
 problem.check()
@@ -246,7 +246,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_map_2D.svg)
+![png](imgs/metal_puzzles_map_2D.png)
 
 ```python
 problem.check()
@@ -305,7 +305,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_broadcast.svg)
+![png](imgs/metal_puzzles_broadcast.png)
 
 ```python
 problem.check()
@@ -365,7 +365,7 @@ problem.show()
     |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_threadgroups.svg)
+![png](imgs/metal_puzzles_threadgroups.png)
 
 ```python
 problem.check()
@@ -421,7 +421,7 @@ problem.show()
     |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_threadgroups_2D.svg)
+![png](imgs/metal_puzzles_threadgroups_2D.png)
 
 ```python
 problem.check()
@@ -504,7 +504,7 @@ problem.show()
     |             1 |             0 |             0 |             1 | 
 ```
 
-![svg](imgs/metal_puzzles_threadgroup_memory.svg)
+![png](imgs/metal_puzzles_threadgroup_memory.png)
 
 ```python
 problem.check()
@@ -577,7 +577,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_pooling.svg)
+![png](imgs/metal_puzzles_pooling.png)
 
 ```
 problem.check()
@@ -646,7 +646,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_dot_product.svg)
+![png](imgs/metal_puzzles_dot_product.png)
 
 ```python
 problem.check()
@@ -713,6 +713,8 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
+![png](imgs/metal_puzzles_1D_conv_simple.png)
+
 ```python
 problem.check()
 ```
@@ -741,8 +743,6 @@ problem = MetalProblem(
 problem.show()
 ```
 
-![svg](imgs/metal_puzzles_1D_conv.svg)
-
 ```
 # 1D Conv (Full)
  
@@ -750,6 +750,8 @@ problem.show()
    |  Global Reads | Global Writes |  Shared Reads | Shared Writes |
    |             0 |             0 |             0 |             0 | 
 ```
+
+![png](imgs/metal_puzzles_1D_conv_full.png)
 
 ```python
 problem.check()
@@ -822,6 +824,8 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
+![png](imgs/metal_puzzles_prefix_sum_simple.png)
+
 ```python
 problem.check()
 ```
@@ -858,7 +862,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_prefix_sum.svg)
+![png](imgs/metal_puzzles_prefix_sum_full.png)
 
 ```python
 problem.check()
@@ -930,7 +934,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_axis_sum.svg)
+![png](imgs/metal_puzzles_axis_sum.png)
 
 ```python
 problem.check()
@@ -1011,6 +1015,8 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
+![png](imgs/metal_puzzles_matmul_simple.png)
+
 ```python
 problem.check()
 ```
@@ -1050,7 +1056,7 @@ problem.show()
    |             0 |             0 |             0 |             0 | 
 ```
 
-![svg](imgs/metal_puzzles_matmul.svg)
+![png](imgs/metal_puzzles_matmul_full.png)
 
 ```python
 problem.check()
